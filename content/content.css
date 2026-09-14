@@ -1,0 +1,70 @@
+/*
+ * PageDelta
+ * Content Styles
+ */
+
+[data-pagedelta] {
+
+    box-sizing: border-box;
+
+    line-height: normal;
+
+    letter-spacing: normal;
+
+    text-transform: none;
+
+    text-indent: 0;
+
+    text-shadow: none;
+
+    text-decoration: none;
+}
+
+
+[data-pagedelta] *,
+[data-pagedelta] *::before,
+[data-pagedelta] *::after {
+
+    box-sizing: border-box;
+}
+
+
+[data-pagedelta] button {
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    outline: none;
+}
+
+
+[data-pagedelta] button:focus-visible {
+
+    outline:
+        2px solid
+        #2563eb;
+
+    outline-offset: 2px;
+}
+
+
+[data-pagedelta]::-webkit-scrollbar {
+
+    width: 7px;
+}
+
+
+[data-pagedelta]::-webkit-scrollbar-track {
+
+    background: transparent;
+}
+
+
+[data-pagedelta]::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 10px;
+}

@@ -1,0 +1,346 @@
+/*
+ * PageDelta
+ * Floating Panel
+ */
+
+#pagedelta-root {
+    all: initial;
+
+    position: fixed;
+
+    z-index: 2147483647;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+.pagedelta-floating-button {
+
+    position: fixed;
+
+    right: 24px;
+
+    bottom: 24px;
+
+    width: 54px;
+
+    height: 54px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #111827,
+            #2563eb
+        );
+
+    box-shadow:
+        0 8px 30px
+        rgba(0, 0, 0, 0.25);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.pagedelta-floating-button:hover {
+
+    transform:
+        translateY(-3px)
+        scale(1.04);
+
+    box-shadow:
+        0 12px 35px
+        rgba(0, 0, 0, 0.3);
+}
+
+
+.pagedelta-panel {
+
+    position: fixed;
+
+    right: 24px;
+
+    bottom: 24px;
+
+    width: 360px;
+
+    max-height: 620px;
+
+    overflow-y: auto;
+
+    background: white;
+
+    color: #111827;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 20px 60px
+        rgba(0, 0, 0, 0.28);
+
+    border:
+        1px solid
+        rgba(0, 0, 0, 0.08);
+
+    overflow-x: hidden;
+}
+
+
+.pagedelta-panel-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 18px 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #111827,
+            #2563eb
+        );
+
+    color: white;
+}
+
+
+.pagedelta-panel-title {
+
+    font-size: 18px;
+
+    font-weight: 700;
+}
+
+
+.pagedelta-close-button {
+
+    width: 30px;
+
+    height: 30px;
+
+    border: none;
+
+    background:
+        rgba(255, 255, 255, 0.12);
+
+    color: white;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 20px;
+
+    line-height: 1;
+}
+
+
+.pagedelta-close-button:hover {
+
+    background:
+        rgba(255, 255, 255, 0.22);
+}
+
+
+.pagedelta-panel-content {
+
+    padding: 18px;
+}
+
+
+.pagedelta-page-title {
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    margin-bottom: 16px;
+
+    line-height: 1.4;
+}
+
+
+.pagedelta-info-card {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 14px;
+
+    margin-bottom: 18px;
+
+    border-radius: 12px;
+
+    background: #f3f4f6;
+}
+
+
+.pagedelta-info-card span {
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+.pagedelta-info-card strong {
+
+    font-size: 18px;
+
+    color: #111827;
+}
+
+
+.pagedelta-section {
+
+    margin-top: 18px;
+}
+
+
+.pagedelta-section h3 {
+
+    margin: 0 0 10px;
+
+    font-size: 14px;
+
+    color: #374151;
+}
+
+
+.pagedelta-list-item {
+
+    padding: 11px 12px;
+
+    margin-bottom: 8px;
+
+    border-radius: 10px;
+
+    background: #f9fafb;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    font-size: 13px;
+
+    line-height: 1.45;
+}
+
+
+.pagedelta-empty {
+
+    padding: 18px;
+
+    text-align: center;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+.pagedelta-message {
+
+    padding: 18px;
+
+    text-align: center;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+}
+
+
+.pagedelta-info {
+
+    background: #eff6ff;
+
+    color: #1d4ed8;
+}
+
+
+.pagedelta-error {
+
+    background: #fef2f2;
+
+    color: #b91c1c;
+}
+
+
+.pagedelta-loading {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 30px 10px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+.pagedelta-spinner {
+
+    width: 18px;
+
+    height: 18px;
+
+    border:
+        2px solid
+        #d1d5db;
+
+    border-top-color:
+        #2563eb;
+
+    border-radius: 50%;
+
+    animation:
+        pagedelta-spin
+        0.8s linear infinite;
+}
+
+
+@keyframes pagedelta-spin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
