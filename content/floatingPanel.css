@@ -1,9 +1,10 @@
 /*
  * PageDelta
- * Floating Panel
+ * Human-Friendly Floating Panel
  */
 
 #pagedelta-root {
+
     all: initial;
 
     position: fixed;
@@ -11,23 +12,43 @@
     z-index: 2147483647;
 
     font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
         Arial,
-        Helvetica,
         sans-serif;
+
+    color: #111827;
 }
 
+
+#pagedelta-root *,
+#pagedelta-root *::before,
+#pagedelta-root *::after {
+
+    box-sizing: border-box;
+}
+
+
+/* --------------------------------------------------
+   Floating button
+   -------------------------------------------------- */
 
 .pagedelta-floating-button {
 
     position: fixed;
 
-    right: 24px;
+    right: 22px;
 
-    bottom: 24px;
+    bottom: 22px;
 
-    width: 54px;
+    width: 52px;
 
-    height: 54px;
+    height: 52px;
+
+    padding: 0;
 
     border: none;
 
@@ -41,74 +62,154 @@
 
     justify-content: center;
 
-    font-size: 16px;
-
-    font-weight: 700;
-
-    color: white;
-
     background:
         linear-gradient(
             135deg,
-            #111827,
+            #183b78,
             #2563eb
         );
 
+    color: white;
+
     box-shadow:
-        0 8px 30px
-        rgba(0, 0, 0, 0.25);
+        0 8px 24px
+        rgba(15, 23, 42, 0.25);
 
     transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+
+    font-family: inherit;
 }
 
 
 .pagedelta-floating-button:hover {
 
     transform:
-        translateY(-3px)
-        scale(1.04);
+        translateY(-2px);
 
     box-shadow:
-        0 12px 35px
-        rgba(0, 0, 0, 0.3);
+        0 12px 30px
+        rgba(15, 23, 42, 0.3);
 }
 
+
+.pagedelta-floating-button:focus-visible {
+
+    outline:
+        3px solid
+        rgba(37, 99, 235, 0.35);
+
+    outline-offset: 3px;
+}
+
+
+.pagedelta-logo-mark {
+
+    width: 30px;
+
+    height: 30px;
+
+    border-radius: 9px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        rgba(255, 255, 255, 0.16);
+
+    font-size: 17px;
+
+    font-weight: 800;
+
+    letter-spacing: -0.02em;
+}
+
+
+/* --------------------------------------------------
+   Main panel
+   -------------------------------------------------- */
 
 .pagedelta-panel {
 
     position: fixed;
 
-    right: 24px;
+    right: 22px;
 
-    bottom: 24px;
+    bottom: 22px;
 
-    width: 360px;
+    width: 390px;
 
-    max-height: 620px;
+    max-width:
+        calc(100vw - 32px);
+
+    max-height:
+        min(720px, calc(100vh - 32px));
 
     overflow-y: auto;
 
-    background: white;
+    overflow-x: hidden;
+
+    background: #ffffff;
 
     color: #111827;
+
+    border:
+        1px solid
+        #e5e7eb;
 
     border-radius: 18px;
 
     box-shadow:
-        0 20px 60px
-        rgba(0, 0, 0, 0.28);
+        0 24px 70px
+        rgba(15, 23, 42, 0.22);
 
-    border:
-        1px solid
-        rgba(0, 0, 0, 0.08);
+    scrollbar-width: thin;
 
-    overflow-x: hidden;
+    animation:
+        pagedelta-panel-in
+        0.18s ease-out;
 }
 
 
+@keyframes pagedelta-panel-in {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(8px)
+            scale(0.98);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* --------------------------------------------------
+   Header
+   -------------------------------------------------- */
+
 .pagedelta-panel-header {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 2;
+
+    min-height: 64px;
 
     display: flex;
 
@@ -116,12 +217,14 @@
 
     justify-content: space-between;
 
-    padding: 18px 20px;
+    padding:
+        14px
+        16px;
 
     background:
         linear-gradient(
             135deg,
-            #111827,
+            #183b78,
             #2563eb
         );
 
@@ -131,171 +234,28 @@
 
 .pagedelta-panel-title {
 
-    font-size: 18px;
-
-    font-weight: 700;
-}
-
-
-.pagedelta-close-button {
-
-    width: 30px;
-
-    height: 30px;
-
-    border: none;
-
-    background:
-        rgba(255, 255, 255, 0.12);
-
-    color: white;
-
-    border-radius: 8px;
-
-    cursor: pointer;
-
-    font-size: 20px;
-
-    line-height: 1;
-}
-
-
-.pagedelta-close-button:hover {
-
-    background:
-        rgba(255, 255, 255, 0.22);
-}
-
-
-.pagedelta-panel-content {
-
-    padding: 18px;
-}
-
-
-.pagedelta-page-title {
-
-    font-size: 17px;
-
-    font-weight: 700;
-
-    margin-bottom: 16px;
-
-    line-height: 1.4;
-}
-
-
-.pagedelta-info-card {
-
     display: flex;
-
-    justify-content: space-between;
 
     align-items: center;
 
-    padding: 14px;
-
-    margin-bottom: 18px;
-
-    border-radius: 12px;
-
-    background: #f3f4f6;
-}
-
-
-.pagedelta-info-card span {
-
-    font-size: 13px;
-
-    color: #6b7280;
-}
-
-
-.pagedelta-info-card strong {
+    gap: 9px;
 
     font-size: 18px;
 
-    color: #111827;
+    font-weight: 750;
+
+    letter-spacing:
+        -0.01em;
 }
 
 
-.pagedelta-section {
+.pagedelta-brand-mark {
 
-    margin-top: 18px;
-}
+    width: 32px;
 
+    height: 32px;
 
-.pagedelta-section h3 {
-
-    margin: 0 0 10px;
-
-    font-size: 14px;
-
-    color: #374151;
-}
-
-
-.pagedelta-list-item {
-
-    padding: 11px 12px;
-
-    margin-bottom: 8px;
-
-    border-radius: 10px;
-
-    background: #f9fafb;
-
-    border:
-        1px solid
-        #e5e7eb;
-
-    font-size: 13px;
-
-    line-height: 1.45;
-}
-
-
-.pagedelta-empty {
-
-    padding: 18px;
-
-    text-align: center;
-
-    color: #6b7280;
-
-    font-size: 13px;
-}
-
-
-.pagedelta-message {
-
-    padding: 18px;
-
-    text-align: center;
-
-    border-radius: 10px;
-
-    font-size: 13px;
-}
-
-
-.pagedelta-info {
-
-    background: #eff6ff;
-
-    color: #1d4ed8;
-}
-
-
-.pagedelta-error {
-
-    background: #fef2f2;
-
-    color: #b91c1c;
-}
-
-
-.pagedelta-loading {
+    border-radius: 9px;
 
     display: flex;
 
@@ -303,9 +263,671 @@
 
     justify-content: center;
 
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    font-size: 16px;
+
+    font-weight: 800;
+}
+
+
+.pagedelta-close-button {
+
+    width: 32px;
+
+    height: 32px;
+
+    padding: 0;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.12);
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 23px;
+
+    line-height: 1;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+.pagedelta-close-button:hover {
+
+    background:
+        rgba(255, 255, 255, 0.2);
+}
+
+
+/* --------------------------------------------------
+   Content
+   -------------------------------------------------- */
+
+.pagedelta-panel-content {
+
+    padding:
+        18px;
+}
+
+
+.pagedelta-page-title {
+
+    margin:
+        0 0 18px;
+
+    font-size: 19px;
+
+    font-weight: 750;
+
+    line-height: 1.35;
+
+    color: #111827;
+
+    word-break: break-word;
+}
+
+
+/* --------------------------------------------------
+   Sections
+   -------------------------------------------------- */
+
+.pagedelta-section {
+
+    margin:
+        0 0 20px;
+}
+
+
+.pagedelta-section h3 {
+
+    margin:
+        0 0 10px;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    color: #374151;
+}
+
+
+/* --------------------------------------------------
+   Summary
+   -------------------------------------------------- */
+
+.pagedelta-summary-card {
+
+    padding:
+        13px 14px;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 12px;
+
+    background:
+        #f9fafb;
+}
+
+
+.pagedelta-summary-card p {
+
+    margin: 0;
+
+    font-size: 14px;
+
+    line-height: 1.55;
+
+    color: #374151;
+}
+
+
+/* --------------------------------------------------
+   Purpose
+   -------------------------------------------------- */
+
+.pagedelta-purpose-card {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 11px;
+
+    padding:
+        13px;
+
+    border:
+        1px solid
+        #dbeafe;
+
+    border-radius: 12px;
+
+    background:
+        #eff6ff;
+}
+
+
+.pagedelta-purpose-icon {
+
+    flex: 0 0 auto;
+
+    width: 28px;
+
+    height: 28px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        #2563eb;
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: 700;
+}
+
+
+.pagedelta-purpose-content {
+
+    min-width: 0;
+}
+
+
+.pagedelta-purpose-label {
+
+    font-size: 14px;
+
+    line-height: 1.45;
+
+    font-weight: 650;
+
+    color: #1e3a8a;
+}
+
+
+.pagedelta-confidence {
+
+    margin-top: 3px;
+
+    font-size: 11px;
+
+    color: #64748b;
+}
+
+
+.pagedelta-purpose-question {
+
+    margin:
+        14px 0 9px;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    color: #374151;
+}
+
+
+.pagedelta-purpose-buttons {
+
+    display: flex;
+
+    gap: 8px;
+}
+
+
+.pagedelta-action-button {
+
+    min-height: 36px;
+
+    padding:
+        8px 14px;
+
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.pagedelta-action-button:hover {
+
+    transform:
+        translateY(-1px);
+}
+
+
+.pagedelta-primary {
+
+    border:
+        1px solid
+        #2563eb;
+
+    background:
+        #2563eb;
+
+    color: white;
+}
+
+
+.pagedelta-primary:hover {
+
+    background:
+        #1d4ed8;
+}
+
+
+.pagedelta-secondary {
+
+    border:
+        1px solid
+        #d1d5db;
+
+    background:
+        white;
+
+    color: #374151;
+}
+
+
+.pagedelta-secondary:hover {
+
+    background:
+        #f9fafb;
+
+    border-color:
+        #9ca3af;
+}
+
+
+/* --------------------------------------------------
+   Purpose correction
+   -------------------------------------------------- */
+
+.pagedelta-purpose-correction {
+
+    margin-top: 10px;
+
+    padding:
+        12px;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 11px;
+
+    background:
+        #f9fafb;
+}
+
+
+.pagedelta-purpose-correction label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 12px;
+
+    font-weight: 650;
+
+    color: #374151;
+}
+
+
+.pagedelta-purpose-correction input {
+
+    width: 100%;
+
+    min-height: 38px;
+
+    padding:
+        9px 10px;
+
+    border:
+        1px solid
+        #d1d5db;
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: #111827;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    outline: none;
+
+    margin-bottom: 8px;
+}
+
+
+.pagedelta-purpose-correction input:focus {
+
+    border-color:
+        #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.1);
+}
+
+
+.pagedelta-correction-success {
+
+    padding: 10px;
+
+    border-radius: 8px;
+
+    background: #ecfdf5;
+
+    color: #166534;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+}
+
+
+/* --------------------------------------------------
+   Important information
+   -------------------------------------------------- */
+
+.pagedelta-important-card {
+
+    display: flex;
+
+    align-items: flex-start;
+
     gap: 10px;
 
-    padding: 30px 10px;
+    padding:
+        12px;
+
+    margin-bottom: 8px;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 11px;
+
+    background:
+        #ffffff;
+}
+
+
+.pagedelta-important-icon {
+
+    flex: 0 0 auto;
+
+    width: 29px;
+
+    height: 29px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background:
+        #f3f4f6;
+
+    font-size: 15px;
+}
+
+
+.pagedelta-important-body {
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.pagedelta-important-title {
+
+    margin-bottom: 3px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: #1f2937;
+}
+
+
+.pagedelta-important-text {
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
+    color: #4b5563;
+
+    word-break: break-word;
+}
+
+
+/* --------------------------------------------------
+   Importance
+   -------------------------------------------------- */
+
+.pagedelta-importance-card {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        12px 14px;
+
+    border-radius: 11px;
+
+    background:
+        #f3f4f6;
+}
+
+
+.pagedelta-importance-card span {
+
+    font-size: 12px;
+
+    color: #6b7280;
+}
+
+
+.pagedelta-importance-card strong {
+
+    font-size: 17px;
+
+    color: #111827;
+}
+
+
+.pagedelta-importance-card[data-level="high"],
+.pagedelta-importance-card[data-level="critical"] {
+
+    background:
+        #fff7ed;
+}
+
+
+.pagedelta-importance-card[data-level="high"] strong,
+.pagedelta-importance-card[data-level="critical"] strong {
+
+    color:
+        #c2410c;
+}
+
+
+/* --------------------------------------------------
+   Form notice
+   -------------------------------------------------- */
+
+.pagedelta-form-notice {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+    padding:
+        12px;
+
+    border:
+        1px solid
+        #fde68a;
+
+    border-radius: 11px;
+
+    background:
+        #fffbeb;
+
+    color: #78350f;
+}
+
+
+.pagedelta-form-icon {
+
+    font-size: 20px;
+
+    line-height: 1;
+}
+
+
+.pagedelta-form-notice strong {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 13px;
+}
+
+
+.pagedelta-form-notice p {
+
+    margin: 0;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+}
+
+
+/* --------------------------------------------------
+   Empty state
+   -------------------------------------------------- */
+
+.pagedelta-empty {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding:
+        13px;
+
+    border:
+        1px solid
+        #e5e7eb;
+
+    border-radius: 11px;
+
+    background:
+        #f9fafb;
+
+    color: #6b7280;
+
+    font-size: 12px;
+
+    line-height: 1.45;
+}
+
+
+.pagedelta-empty-icon {
+
+    width: 26px;
+
+    height: 26px;
+
+    flex: 0 0 auto;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        #dcfce7;
+
+    color:
+        #15803d;
+
+    font-weight: 700;
+}
+
+
+/* --------------------------------------------------
+   Loading
+   -------------------------------------------------- */
+
+.pagedelta-loading {
+
+    min-height: 120px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 9px;
 
     color: #6b7280;
 
@@ -321,7 +943,7 @@
 
     border:
         2px solid
-        #d1d5db;
+        #dbeafe;
 
     border-top-color:
         #2563eb;
@@ -330,17 +952,124 @@
 
     animation:
         pagedelta-spin
-        0.8s linear infinite;
+        0.75s linear infinite;
 }
 
 
 @keyframes pagedelta-spin {
 
     from {
-        transform: rotate(0deg);
+        transform:
+            rotate(0deg);
     }
 
     to {
-        transform: rotate(360deg);
+        transform:
+            rotate(360deg);
+    }
+}
+
+
+/* --------------------------------------------------
+   Messages
+   -------------------------------------------------- */
+
+.pagedelta-message {
+
+    padding:
+        16px;
+
+    border-radius: 11px;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
+    text-align: center;
+}
+
+
+.pagedelta-info {
+
+    background:
+        #eff6ff;
+
+    color:
+        #1d4ed8;
+}
+
+
+.pagedelta-success {
+
+    background:
+        #ecfdf5;
+
+    color:
+        #166534;
+}
+
+
+.pagedelta-error {
+
+    background:
+        #fef2f2;
+
+    color:
+        #b91c1c;
+}
+
+
+/* --------------------------------------------------
+   Footer
+   -------------------------------------------------- */
+
+.pagedelta-footer {
+
+    margin-top: 4px;
+
+    padding-top: 12px;
+
+    border-top:
+        1px solid
+        #f0f0f0;
+
+    color: #9ca3af;
+
+    font-size: 10px;
+
+    text-align: center;
+}
+
+
+/* --------------------------------------------------
+   Small screens
+   -------------------------------------------------- */
+
+@media (max-width: 520px) {
+
+    .pagedelta-panel {
+
+        right: 8px;
+
+        bottom: 8px;
+
+        width:
+            calc(100vw - 16px);
+
+        max-width:
+            calc(100vw - 16px);
+
+        max-height:
+            calc(100vh - 16px);
+
+        border-radius: 15px;
+    }
+
+
+    .pagedelta-floating-button {
+
+        right: 16px;
+
+        bottom: 16px;
     }
 }
