@@ -1,161 +1,386 @@
 /*
  * PageDelta
  * Text Extraction Engine
+ *
+ * Extracts meaningful visible page text while
+ * avoiding scripts, media, navigation noise and
+ * excessively large DOM payloads.
  */
 
-function extractPageText() {
-
-    if (!document.body) {
-        return "";
-    }
-
-    const clonedBody =
-        document.body.cloneNode(true);
-
-    const elementsToRemove =
-        clonedBody.querySelectorAll(
-            "script, style, noscript, svg, canvas, iframe, video, audio, nav, footer"
-        );
-
-    elementsToRemove.forEach(
-        element => element.remove()
-    );
-
-    const text =
-        clonedBody.innerText ||
-        clonedBody.textContent ||
-        "";
-
-    return cleanText(text).substring(
-        0,
-        PAGEDELTA.LIMITS.MAX_TEXT_LENGTH
-    );
-}
+(function () {
+    "use strict";
 
 
-function extractVisibleTextElements() {
+    /*
+     * --------------------------------------------------
+     * Safe limit helpers
+     * --------------------------------------------------
+     */
 
-    if (!document.body) {
-        return [];
-    }
-
-    const elements =
-        document.body.querySelectorAll(
-            "h1, h2, h3, h4, h5, h6, p, li, label, button, a, td, th, strong"
-        );
-
-    const results = [];
-
-    elements.forEach(element => {
-
-        if (!isElementVisible(element)) {
-            return;
-        }
-
-        const text =
-            cleanText(
-                element.innerText ||
-                element.textContent ||
-                ""
-            );
+    function getLimit(
+        name,
+        fallback
+    ) {
 
         if (
-            !text ||
-            text.length < 2
+            typeof PAGEDELTA !==
+            "undefined" &&
+            PAGEDELTA.LIMITS &&
+            Number.isFinite(
+                PAGEDELTA.LIMITS[name]
+            )
         ) {
-            return;
+
+            return PAGEDELTA.LIMITS[name];
         }
 
-        results.push({
 
-            tag:
-                element.tagName.toLowerCase(),
+        return fallback;
+    }
 
-            text:
-                truncateText(
-                    text,
-                    PAGEDELTA.LIMITS
-                        .MAX_ELEMENT_TEXT_LENGTH
+
+    /*
+     * --------------------------------------------------
+     * Extract complete page text
+     * --------------------------------------------------
+     */
+
+    function extractPageText() {
+
+        if (!document.body) {
+            return "";
+        }
+
+
+        try {
+
+            const clonedBody =
+                document.body.cloneNode(true);
+
+
+            const elementsToRemove =
+                clonedBody.querySelectorAll(
+                    [
+                        "script",
+                        "style",
+                        "noscript",
+                        "svg",
+                        "canvas",
+                        "iframe",
+                        "video",
+                        "audio",
+                        "nav",
+                        "footer",
+                        "template"
+                    ].join(",")
+                );
+
+
+            elementsToRemove.forEach(
+                element =>
+                    element.remove()
+            );
+
+
+            const text =
+                clonedBody.innerText ||
+                clonedBody.textContent ||
+                "";
+
+
+            return cleanText(text)
+                .substring(
+                    0,
+                    getLimit(
+                        "MAX_TEXT_LENGTH",
+                        50000
+                    )
+                );
+
+        } catch (error) {
+
+            console.error(
+                "[PageDelta] Page text extraction failed:",
+                error
+            );
+
+            return "";
+        }
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Extract visible text elements
+     * --------------------------------------------------
+     */
+
+    function extractVisibleTextElements() {
+
+        if (!document.body) {
+            return [];
+        }
+
+
+        const maxElements =
+            getLimit(
+                "MAX_VISIBLE_ELEMENTS",
+                1000
+            );
+
+
+        const maxTextLength =
+            getLimit(
+                "MAX_ELEMENT_TEXT_LENGTH",
+                500
+            );
+
+
+        try {
+
+            const elements =
+                document.body.querySelectorAll(
+                    [
+                        "h1",
+                        "h2",
+                        "h3",
+                        "h4",
+                        "h5",
+                        "h6",
+                        "p",
+                        "li",
+                        "label",
+                        "button",
+                        "a",
+                        "td",
+                        "th",
+                        "strong"
+                    ].join(",")
+                );
+
+
+            const results = [];
+
+
+            elements.forEach(element => {
+
+                if (
+                    results.length >=
+                    maxElements
+                ) {
+                    return;
+                }
+
+
+                if (
+                    typeof isElementVisible ===
+                    "function" &&
+                    !isElementVisible(element)
+                ) {
+                    return;
+                }
+
+
+                const text =
+                    cleanText(
+                        element.innerText ||
+                        element.textContent ||
+                        ""
+                    );
+
+
+                if (
+                    !text ||
+                    text.length < 2
+                ) {
+                    return;
+                }
+
+
+                results.push({
+
+                    tag:
+                        String(
+                            element.tagName ||
+                            ""
+                        ).toLowerCase(),
+
+                    text:
+                        truncateText(
+                            text,
+                            maxTextLength
+                        )
+                });
+
+            });
+
+
+            return results;
+
+        } catch (error) {
+
+            console.error(
+                "[PageDelta] Visible text extraction failed:",
+                error
+            );
+
+            return [];
+        }
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Extract headings
+     * --------------------------------------------------
+     */
+
+    function extractHeadings() {
+
+        try {
+
+            const maxHeadings =
+                getLimit(
+                    "MAX_HEADINGS",
+                    getLimit(
+                        "MAX_HEADING_COUNT",
+                        100
+                    )
+                );
+
+
+            const headings =
+                document.querySelectorAll(
+                    "h1, h2, h3, h4, h5, h6"
+                );
+
+
+            return Array.from(headings)
+
+                .map(element => {
+
+                    const tag =
+                        String(
+                            element.tagName ||
+                            ""
+                        );
+
+
+                    return {
+
+                        level:
+                            Number(
+                                tag.substring(1)
+                            ),
+
+                        text:
+                            cleanText(
+                                element.innerText ||
+                                element.textContent ||
+                                ""
+                            )
+                    };
+
+                })
+
+                .filter(item =>
+                    item.text
                 )
-        });
-    });
 
-    return results.slice(
-        0,
-        PAGEDELTA.LIMITS
-            .MAX_VISIBLE_ELEMENTS
-    );
-}
+                .slice(
+                    0,
+                    maxHeadings
+                );
+
+        } catch (error) {
+
+            console.error(
+                "[PageDelta] Heading extraction failed:",
+                error
+            );
+
+            return [];
+        }
+    }
 
 
-function extractHeadings() {
+    /*
+     * --------------------------------------------------
+     * Extract paragraphs
+     * --------------------------------------------------
+     */
 
-    const headings =
-        document.querySelectorAll(
-            "h1, h2, h3, h4, h5, h6"
-        );
+    function extractParagraphs() {
 
-    return Array.from(headings)
-        .map(element => ({
+        try {
 
-            level:
-                Number(
-                    element.tagName
-                        .substring(1)
-                ),
+            return Array.from(
+                document.querySelectorAll("p")
+            )
 
-            text:
-                cleanText(
-                    element.innerText ||
-                    element.textContent ||
-                    ""
+                .map(element =>
+                    cleanText(
+                        element.innerText ||
+                        element.textContent ||
+                        ""
+                    )
                 )
-        }))
-        .filter(item => item.text)
-        .slice(
-            0,
-            PAGEDELTA.LIMITS.MAX_HEADINGS
-        );
-}
+
+                .filter(
+                    text =>
+                        text.length > 1
+                )
+
+                .slice(0, 500);
+
+        } catch (error) {
+
+            return [];
+        }
+    }
 
 
-function extractParagraphs() {
+    /*
+     * --------------------------------------------------
+     * Extract list items
+     * --------------------------------------------------
+     */
 
-    const paragraphs =
-        document.querySelectorAll("p");
+    function extractLists() {
 
-    return Array.from(paragraphs)
-        .map(element =>
-            cleanText(
-                element.innerText ||
-                element.textContent ||
-                ""
+        try {
+
+            return Array.from(
+                document.querySelectorAll("li")
             )
-        )
-        .filter(text => text.length > 1)
-        .slice(0, 500);
-}
+
+                .map(element =>
+                    cleanText(
+                        element.innerText ||
+                        element.textContent ||
+                        ""
+                    )
+                )
+
+                .filter(
+                    text =>
+                        text.length > 1
+                )
+
+                .slice(0, 500);
+
+        } catch (error) {
+
+            return [];
+        }
+    }
 
 
-function extractLists() {
-
-    const lists =
-        document.querySelectorAll("li");
-
-    return Array.from(lists)
-        .map(element =>
-            cleanText(
-                element.innerText ||
-                element.textContent ||
-                ""
-            )
-        )
-        .filter(text => text.length > 1)
-        .slice(0, 500);
-}
-
-
-if (typeof globalThis !== "undefined") {
+    /*
+     * --------------------------------------------------
+     * Export
+     * --------------------------------------------------
+     */
 
     globalThis.extractPageText =
         extractPageText;
@@ -171,4 +396,10 @@ if (typeof globalThis !== "undefined") {
 
     globalThis.extractLists =
         extractLists;
-}
+
+
+    console.log(
+        "[PageDelta] Text extractor loaded."
+    );
+
+})();
