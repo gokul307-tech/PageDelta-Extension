@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "PageDelta",
     "version": "1.0.0",
-    "description": "An intelligent browser extension that analyzes webpages, detects important information, tracks changes, and helps users manage actions and deadlines.",
+    "description": "A privacy-first personal web assistant that helps users understand webpages, identify what matters, protect personal information, and track important changes and deadlines.",
 
     "permissions": [
         "storage",
@@ -55,6 +55,8 @@
                 "intelligence/informationRanker.js",
                 "intelligence/confidenceEngine.js",
                 "intelligence/languageDetector.js",
+
+                "intelligence/pagePresentation.js",
 
                 "delta/snapshotNormalizer.js",
                 "delta/textDiff.js",
