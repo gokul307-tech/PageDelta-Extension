@@ -1,6 +1,6 @@
 /*
  * PageDelta
- * Floating Panel
+ * Human-Friendly Floating Panel
  */
 
 (function () {
@@ -16,8 +16,11 @@
 
 
     /*
-     * Create the PageDelta interface.
+     * --------------------------------------------------
+     * Initialization
+     * --------------------------------------------------
      */
+
     function initializeFloatingPanel() {
 
         if (
@@ -47,8 +50,9 @@
 
 
         /*
-         * Floating button.
+         * Floating PageDelta button.
          */
+
         button =
             document.createElement(
                 "button"
@@ -63,12 +67,35 @@
             "pagedelta-floating-button";
 
 
-        button.textContent =
-            "PD";
+        button.type =
+            "button";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Open PageDelta"
+        );
 
 
         button.title =
             "Open PageDelta";
+
+
+        /*
+         * Use a simple logo mark for now.
+         *
+         * We will replace this with the actual
+         * PageDelta image asset in the UI polish stage.
+         */
+
+        button.innerHTML = `
+            <span
+                class="pagedelta-logo-mark"
+                aria-hidden="true"
+            >
+                P
+            </span>
+        `;
 
 
         button.addEventListener(
@@ -80,6 +107,7 @@
         /*
          * Main panel.
          */
+
         panel =
             document.createElement(
                 "div"
@@ -94,6 +122,18 @@
             "pagedelta-panel";
 
 
+        panel.setAttribute(
+            "role",
+            "dialog"
+        );
+
+
+        panel.setAttribute(
+            "aria-label",
+            "PageDelta page information"
+        );
+
+
         panel.style.display =
             "none";
 
@@ -101,6 +141,7 @@
         /*
          * Header.
          */
+
         const header =
             document.createElement(
                 "div"
@@ -121,8 +162,15 @@
             "pagedelta-panel-title";
 
 
-        title.textContent =
-            "PageDelta";
+        title.innerHTML = `
+            <span class="pagedelta-brand-mark">
+                P
+            </span>
+
+            <span>
+                PageDelta
+            </span>
+        `;
 
 
         const closeButton =
@@ -135,8 +183,18 @@
             "pagedelta-close-button";
 
 
+        closeButton.type =
+            "button";
+
+
         closeButton.textContent =
             "×";
+
+
+        closeButton.setAttribute(
+            "aria-label",
+            "Close PageDelta"
+        );
 
 
         closeButton.addEventListener(
@@ -156,8 +214,9 @@
 
 
         /*
-         * Content.
+         * Content area.
          */
+
         content =
             document.createElement(
                 "div"
@@ -198,11 +257,15 @@
 
 
     /*
-     * Show panel.
+     * --------------------------------------------------
+     * Visibility
+     * --------------------------------------------------
      */
+
     function showFloatingPanel() {
 
         if (!panel) {
+
             initializeFloatingPanel();
         }
 
@@ -227,9 +290,6 @@
     }
 
 
-    /*
-     * Hide panel.
-     */
     function hideFloatingPanel() {
 
         if (!panel) {
@@ -246,9 +306,6 @@
     }
 
 
-    /*
-     * Toggle panel.
-     */
     function toggleFloatingPanel() {
 
         if (!panel) {
@@ -276,8 +333,11 @@
 
 
     /*
-     * Show loading state.
+     * --------------------------------------------------
+     * Loading
+     * --------------------------------------------------
      */
+
     function showPanelLoading() {
 
         if (!content) {
@@ -289,10 +349,13 @@
 
             <div class="pagedelta-loading">
 
-                <div class="pagedelta-spinner"></div>
+                <div
+                    class="pagedelta-spinner"
+                    aria-hidden="true"
+                ></div>
 
                 <div>
-                    Analyzing page...
+                    Understanding this page...
                 </div>
 
             </div>
@@ -301,8 +364,11 @@
 
 
     /*
-     * Update panel with analysis.
+     * --------------------------------------------------
+     * Main update
+     * --------------------------------------------------
      */
+
     function updateFloatingPanel(
         analysis
     ) {
@@ -315,7 +381,7 @@
         if (!analysis) {
 
             showPanelMessage(
-                "No analysis available.",
+                "Page information is not available.",
                 "info"
             );
 
@@ -323,184 +389,173 @@
         }
 
 
-        const title =
-            analysis.title ||
-            document.title ||
-            "Current Page";
-
-
-        const importance =
-            analysis.importance ??
-            0;
-
-
-        const importanceLevel =
-            analysis.importanceLevel ||
-            "low";
-
-
-        const deadlines =
-            Array.isArray(
-                analysis.deadlines
-            )
-                ? analysis.deadlines
-                : [];
-
-
-        const requirements =
-            Array.isArray(
-                analysis.requirements
-            )
-                ? analysis.requirements
-                : [];
-
-
         content.innerHTML = "";
+
+
+        /*
+         * Build presentation layer.
+         */
+
+        let presentation = null;
+
+
+        if (
+            typeof createPagePresentation ===
+            "function"
+        ) {
+
+            try {
+
+                presentation =
+                    createPagePresentation(
+                        analysis
+                    );
+
+            } catch (error) {
+
+                console.error(
+                    "[PageDelta] Presentation error:",
+                    error
+                );
+            }
+        }
+
+
+        /*
+         * Fallback if presentation layer
+         * is unavailable.
+         */
+
+        if (!presentation) {
+
+            presentation =
+                buildFallbackPresentation(
+                    analysis
+                );
+        }
 
 
         /*
          * Page title.
          */
-        const pageTitle =
-            document.createElement(
-                "div"
-            );
+
+        createPageTitle(
+            presentation.title
+        );
 
 
-        pageTitle.className =
-            "pagedelta-page-title";
+        /*
+         * Page summary.
+         */
+
+        createSummarySection(
+            presentation
+        );
 
 
-        pageTitle.textContent =
-            title;
+        /*
+         * Purpose section.
+         */
+
+        createPurposeSection(
+            presentation
+        );
 
 
-        content.appendChild(
-            pageTitle
+        /*
+         * Important information.
+         */
+
+        createImportantSection(
+            presentation
         );
 
 
         /*
          * Importance.
          */
-        const importanceCard =
-            createInfoCard(
-                "Importance",
-                `${importance}/100`
-            );
 
-
-        importanceCard.dataset.level =
-            importanceLevel;
-
-
-        content.appendChild(
-            importanceCard
+        createImportanceSection(
+            presentation
         );
 
 
         /*
-         * Deadlines.
+         * Form information.
          */
-        if (deadlines.length) {
 
-            const section =
-                createSection(
-                    "Deadlines"
-                );
-
-
-            deadlines
-                .slice(0, 5)
-                .forEach(
-                    deadline => {
-
-                        section.appendChild(
-                            createListItem(
-                                formatAnalysisItem(
-                                    deadline
-                                )
-                            )
-                        );
-                    }
-                );
-
-
-            content.appendChild(
-                section
-            );
-        }
+        createFormSection(
+            presentation
+        );
 
 
         /*
-         * Requirements.
+         * Empty state.
          */
-        if (requirements.length) {
 
-            const section =
-                createSection(
-                    "Requirements"
-                );
-
-
-            requirements
-                .slice(0, 5)
-                .forEach(
-                    requirement => {
-
-                        section.appendChild(
-                            createListItem(
-                                formatAnalysisItem(
-                                    requirement
-                                )
-                            )
-                        );
-                    }
-                );
-
-
-            content.appendChild(
-                section
-            );
-        }
-
-
-        /*
-         * No detected information.
-         */
         if (
-            !deadlines.length &&
-            !requirements.length
+            !presentation.importantInformation.length &&
+            !presentation.counts.fields
         ) {
 
-            const message =
-                document.createElement(
-                    "div"
-                );
-
-
-            message.className =
-                "pagedelta-empty";
-
-
-            message.textContent =
-                "No important actions detected on this page.";
-
-
-            content.appendChild(
-                message
-            );
+            createEmptySection();
         }
+
+
+        /*
+         * Footer.
+         */
+
+        createFooter();
     }
 
 
     /*
-     * Create information card.
+     * --------------------------------------------------
+     * Title
+     * --------------------------------------------------
      */
-    function createInfoCard(
-        label,
-        value
+
+    function createPageTitle(
+        title
     ) {
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+
+        element.className =
+            "pagedelta-page-title";
+
+
+        element.textContent =
+            title ||
+            "Current webpage";
+
+
+        content.appendChild(
+            element
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Summary
+     * --------------------------------------------------
+     */
+
+    function createSummarySection(
+        presentation
+    ) {
+
+        const section =
+            createSection(
+                "What is this page?"
+            );
+
 
         const card =
             document.createElement(
@@ -509,46 +564,785 @@
 
 
         card.className =
-            "pagedelta-info-card";
+            "pagedelta-summary-card";
 
 
-        const labelElement =
+        const text =
+            document.createElement(
+                "p"
+            );
+
+
+        text.textContent =
+            presentation.summary &&
+            presentation.summary.text
+                ? presentation.summary.text
+                : "Information from this webpage.";
+
+
+        card.appendChild(
+            text
+        );
+
+
+        section.appendChild(
+            card
+        );
+
+
+        content.appendChild(
+            section
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Purpose
+     * --------------------------------------------------
+     */
+
+    function createPurposeSection(
+        presentation
+    ) {
+
+        const section =
+            createSection(
+                "You may be here to"
+            );
+
+
+        const purpose =
+            presentation.purpose &&
+            presentation.purpose.purpose
+                ? presentation.purpose.purpose
+                : "Understand this webpage";
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "pagedelta-purpose-card";
+
+
+        const icon =
+            document.createElement(
+                "div"
+            );
+
+
+        icon.className =
+            "pagedelta-purpose-icon";
+
+
+        icon.textContent =
+            "✓";
+
+
+        const textContainer =
+            document.createElement(
+                "div"
+            );
+
+
+        textContainer.className =
+            "pagedelta-purpose-content";
+
+
+        const label =
+            document.createElement(
+                "div"
+            );
+
+
+        label.className =
+            "pagedelta-purpose-label";
+
+
+        label.textContent =
+            purpose;
+
+
+        textContainer.appendChild(
+            label
+        );
+
+
+        if (
+            presentation.purpose &&
+            presentation.purpose.confidence
+        ) {
+
+            const confidence =
+                document.createElement(
+                    "div"
+                );
+
+
+            confidence.className =
+                "pagedelta-confidence";
+
+
+            confidence.textContent =
+                `${presentation.purpose.confidence}% confidence`;
+
+
+            textContainer.appendChild(
+                confidence
+            );
+        }
+
+
+        card.appendChild(
+            icon
+        );
+
+
+        card.appendChild(
+            textContainer
+        );
+
+
+        section.appendChild(
+            card
+        );
+
+
+        /*
+         * Purpose confirmation.
+         *
+         * These buttons currently provide the
+         * interface only. The actual contextual
+         * re-analysis behavior will be implemented
+         * in the next stage.
+         */
+
+        const question =
+            document.createElement(
+                "div"
+            );
+
+
+        question.className =
+            "pagedelta-purpose-question";
+
+
+        question.textContent =
+            "Is this what you're here for?";
+
+
+        section.appendChild(
+            question
+        );
+
+
+        const buttons =
+            document.createElement(
+                "div"
+            );
+
+
+        buttons.className =
+            "pagedelta-purpose-buttons";
+
+
+        const yesButton =
+            createActionButton(
+                "Yes",
+                "primary"
+            );
+
+
+        const noButton =
+            createActionButton(
+                "No",
+                "secondary"
+            );
+
+
+        yesButton.addEventListener(
+            "click",
+            () => {
+
+                showPanelMessage(
+                    "Got it. PageDelta will use this purpose for this page.",
+                    "success"
+                );
+
+                setTimeout(
+                    () => {
+
+                        if (
+                            PAGEDELTA_CONTENT &&
+                            PAGEDELTA_CONTENT.lastAnalysis
+                        ) {
+
+                            updateFloatingPanel(
+                                PAGEDELTA_CONTENT.lastAnalysis
+                            );
+                        }
+
+                    },
+                    900
+                );
+            }
+        );
+
+
+        noButton.addEventListener(
+            "click",
+            () => {
+
+                showPurposeCorrection(
+                    section,
+                    presentation
+                );
+            }
+        );
+
+
+        buttons.appendChild(
+            yesButton
+        );
+
+
+        buttons.appendChild(
+            noButton
+        );
+
+
+        section.appendChild(
+            buttons
+        );
+
+
+        content.appendChild(
+            section
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Purpose correction UI
+     * --------------------------------------------------
+     */
+
+    function showPurposeCorrection(
+        section,
+        presentation
+    ) {
+
+        const existing =
+            section.querySelector(
+                ".pagedelta-purpose-correction"
+            );
+
+
+        if (existing) {
+            return;
+        }
+
+
+        const wrapper =
+            document.createElement(
+                "div"
+            );
+
+
+        wrapper.className =
+            "pagedelta-purpose-correction";
+
+
+        const label =
+            document.createElement(
+                "label"
+            );
+
+
+        label.textContent =
+            "What are you trying to do on this page?";
+
+
+        const input =
+            document.createElement(
+                "input"
+            );
+
+
+        input.type =
+            "text";
+
+
+        input.placeholder =
+            "For example: check the deadline";
+
+
+        input.maxLength =
+            200;
+
+
+        const submit =
+            createActionButton(
+                "Use this purpose",
+                "primary"
+            );
+
+
+        submit.addEventListener(
+            "click",
+            () => {
+
+                const value =
+                    input.value.trim();
+
+
+                if (!value) {
+
+                    input.focus();
+
+                    return;
+                }
+
+
+                /*
+                 * Temporary contextual result.
+                 *
+                 * We deliberately do NOT save this
+                 * as a permanent domain rule.
+                 *
+                 * The full contextual purpose system
+                 * comes in the next stage.
+                 */
+
+                presentation.purpose = {
+
+                    purpose:
+                        value,
+
+                    confidence:
+                        100,
+
+                    userProvided:
+                        true
+                };
+
+
+                wrapper.innerHTML = `
+
+                    <div
+                        class="pagedelta-correction-success"
+                    >
+                        ✓ PageDelta will focus on:
+                        <strong></strong>
+                    </div>
+                `;
+
+
+                const strong =
+                    wrapper.querySelector(
+                        "strong"
+                    );
+
+
+                strong.textContent =
+                    value;
+            }
+        );
+
+
+        wrapper.appendChild(
+            label
+        );
+
+
+        wrapper.appendChild(
+            input
+        );
+
+
+        wrapper.appendChild(
+            submit
+        );
+
+
+        section.appendChild(
+            wrapper
+        );
+
+
+        input.focus();
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Important information
+     * --------------------------------------------------
+     */
+
+    function createImportantSection(
+        presentation
+    ) {
+
+        const items =
+            Array.isArray(
+                presentation.importantInformation
+            )
+                ? presentation.importantInformation
+                : [];
+
+
+        if (!items.length) {
+            return;
+        }
+
+
+        const section =
+            createSection(
+                "Important information"
+            );
+
+
+        items
+            .slice(0, 6)
+            .forEach(
+                item => {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    card.className =
+                        "pagedelta-important-card";
+
+
+                    const icon =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    icon.className =
+                        "pagedelta-important-icon";
+
+
+                    icon.textContent =
+                        item.icon ||
+                        "•";
+
+
+                    const body =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    body.className =
+                        "pagedelta-important-body";
+
+
+                    const title =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    title.className =
+                        "pagedelta-important-title";
+
+
+                    title.textContent =
+                        item.title ||
+                        "Information";
+
+
+                    const text =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    text.className =
+                        "pagedelta-important-text";
+
+
+                    text.textContent =
+                        item.text ||
+                        "";
+
+
+                    body.appendChild(
+                        title
+                    );
+
+
+                    body.appendChild(
+                        text
+                    );
+
+
+                    card.appendChild(
+                        icon
+                    );
+
+
+                    card.appendChild(
+                        body
+                    );
+
+
+                    section.appendChild(
+                        card
+                    );
+                }
+            );
+
+
+        content.appendChild(
+            section
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Importance
+     * --------------------------------------------------
+     */
+
+    function createImportanceSection(
+        presentation
+    ) {
+
+        const score =
+            presentation.importance &&
+            Number.isFinite(
+                Number(
+                    presentation.importance.score
+                )
+            )
+                ? Number(
+                    presentation.importance.score
+                )
+                : 0;
+
+
+        const level =
+            presentation.importance &&
+            presentation.importance.level
+                ? presentation.importance.level
+                : "low";
+
+
+        const section =
+            createSection(
+                "Page importance"
+            );
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "pagedelta-importance-card";
+
+
+        card.dataset.level =
+            level;
+
+
+        const label =
             document.createElement(
                 "span"
             );
 
 
-        labelElement.textContent =
-            label;
+        label.textContent =
+            "Importance";
 
 
-        const valueElement =
+        const value =
             document.createElement(
                 "strong"
             );
 
 
-        valueElement.textContent =
-            value;
+        value.textContent =
+            `${score}/100`;
 
 
         card.appendChild(
-            labelElement
+            label
         );
 
 
         card.appendChild(
-            valueElement
+            value
         );
 
 
-        return card;
+        section.appendChild(
+            card
+        );
+
+
+        content.appendChild(
+            section
+        );
     }
 
 
     /*
-     * Create section.
+     * --------------------------------------------------
+     * Form information
+     * --------------------------------------------------
      */
+
+    function createFormSection(
+        presentation
+    ) {
+
+        const count =
+            presentation.counts &&
+            Number(
+                presentation.counts.fields
+            ) || 0;
+
+
+        if (!count) {
+            return;
+        }
+
+
+        const section =
+            createSection(
+                "Information requested"
+            );
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "pagedelta-form-notice";
+
+
+        card.innerHTML = `
+
+            <div class="pagedelta-form-icon">
+                📝
+            </div>
+
+            <div>
+                <strong>
+                    This page is asking for information.
+                </strong>
+
+                <p>
+                    PageDelta can help identify the
+                    fields before anything is filled.
+                </p>
+            </div>
+
+        `;
+
+
+        section.appendChild(
+            card
+        );
+
+
+        content.appendChild(
+            section
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Empty state
+     * --------------------------------------------------
+     */
+
+    function createEmptySection() {
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+
+        element.className =
+            "pagedelta-empty";
+
+
+        element.innerHTML = `
+
+            <div class="pagedelta-empty-icon">
+                ✓
+            </div>
+
+            <div>
+                PageDelta did not find any
+                additional important information.
+            </div>
+
+        `;
+
+
+        content.appendChild(
+            element
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Footer
+     * --------------------------------------------------
+     */
+
+    function createFooter() {
+
+        const footer =
+            document.createElement(
+                "div"
+            );
+
+
+        footer.className =
+            "pagedelta-footer";
+
+
+        footer.textContent =
+            "PageDelta · Information stays local";
+
+
+        content.appendChild(
+            footer
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * UI helpers
+     * --------------------------------------------------
+     */
+
     function createSection(
         title
     ) {
@@ -582,65 +1376,33 @@
     }
 
 
-    /*
-     * Create list item.
-     */
-    function createListItem(
-        text
+    function createActionButton(
+        text,
+        variant = "secondary"
     ) {
 
-        const item =
+        const button =
             document.createElement(
-                "div"
+                "button"
             );
 
 
-        item.className =
-            "pagedelta-list-item";
+        button.type =
+            "button";
 
 
-        item.textContent =
+        button.className =
+            `pagedelta-action-button pagedelta-${variant}`;
+
+
+        button.textContent =
             text;
 
 
-        return item;
+        return button;
     }
 
 
-    /*
-     * Safely format analyzer output.
-     */
-    function formatAnalysisItem(
-        item
-    ) {
-
-        if (
-            typeof item ===
-            "string"
-        ) {
-
-            return item;
-        }
-
-
-        if (!item) {
-            return "";
-        }
-
-
-        return (
-            item.text ||
-            item.title ||
-            item.description ||
-            item.value ||
-            JSON.stringify(item)
-        );
-    }
-
-
-    /*
-     * Show a message.
-     */
     function showPanelMessage(
         message,
         type = "info"
@@ -674,6 +1436,116 @@
     }
 
 
+    /*
+     * --------------------------------------------------
+     * Fallback presentation
+     * --------------------------------------------------
+     */
+
+    function buildFallbackPresentation(
+        analysis
+    ) {
+
+        const requirements =
+            Array.isArray(
+                analysis.requirements
+            )
+                ? analysis.requirements
+                : [];
+
+
+        return {
+
+            title:
+                analysis.title ||
+                "Current webpage",
+
+            summary: {
+
+                text:
+                    analysis.title
+                        ? `Information about ${analysis.title}.`
+                        : "Information from this webpage."
+            },
+
+            purpose: {
+
+                purpose:
+                    "Understand this webpage",
+
+                confidence:
+                    20
+            },
+
+            importantInformation:
+                requirements
+                    .slice(0, 5)
+                    .map(
+                        requirement => ({
+
+                            type:
+                                "requirement",
+
+                            icon:
+                                "📋",
+
+                            title:
+                                "Requirement",
+
+                            text:
+                                typeof requirement ===
+                                "string"
+                                    ? requirement
+                                    : (
+                                        requirement &&
+                                        (
+                                            requirement.context ||
+                                            requirement.text ||
+                                            requirement.description ||
+                                            ""
+                                        )
+                                    ),
+
+                            priority:
+                                50
+                        })
+                    )
+                    .filter(
+                        item =>
+                            item.text
+                    ),
+
+            counts: {
+
+                fields:
+                    Array.isArray(
+                        analysis.fields
+                    )
+                        ? analysis.fields.length
+                        : 0
+            },
+
+            importance: {
+
+                score:
+                    Number(
+                        analysis.importance
+                    ) || 0,
+
+                level:
+                    analysis.importanceLevel ||
+                    "low"
+            }
+        };
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Exports
+     * --------------------------------------------------
+     */
+
     globalThis.initializeFloatingPanel =
         initializeFloatingPanel;
 
@@ -700,5 +1572,10 @@
 
     globalThis.showPanelMessage =
         showPanelMessage;
+
+
+    console.log(
+        "[PageDelta] Human-friendly floating panel loaded."
+    );
 
 })();
