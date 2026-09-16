@@ -1,14 +1,21 @@
 /*
  * PageDelta
  * String Utilities
+ *
+ * Shared, defensive text helpers used throughout
+ * the content-side analysis pipeline.
  */
 
 (function () {
     "use strict";
 
+
     /*
-     * Clean and normalize text.
+     * --------------------------------------------------
+     * Clean text
+     * --------------------------------------------------
      */
+
     function cleanText(value) {
 
         if (
@@ -18,15 +25,27 @@
             return "";
         }
 
+
         return String(value)
-            .replace(/\u00A0/g, " ")
-            .replace(/\s+/g, " ")
+
+            .replace(
+                /\u00A0/g,
+                " "
+            )
+
+            .replace(
+                /\s+/g,
+                " "
+            )
+
             .trim();
     }
 
 
     /*
-     * Check whether text contains a value.
+     * --------------------------------------------------
+     * containsText
+     * --------------------------------------------------
      *
      * Supports:
      *
@@ -34,10 +53,17 @@
      *
      * containsText("hello world", "HELLO")
      *
-     * containsText("hello world", ["hello", "world"])
+     * containsText(
+     *     "hello world",
+     *     ["hello", "world"]
+     * )
      *
-     * containsText("hello world", /hello/i)
+     * containsText(
+     *     "hello world",
+     *     /hello/i
+     * )
      */
+
     function containsText(
         text,
         search,
@@ -50,6 +76,7 @@
         ) {
             return false;
         }
+
 
         if (
             search === null ||
@@ -64,21 +91,47 @@
 
 
         /*
+         * Empty source cannot contain
+         * meaningful search text.
+         */
+        if (!source) {
+            return false;
+        }
+
+
+        /*
          * Regular expression support.
+         *
+         * Reset lastIndex for global/sticky
+         * regular expressions so repeated calls
+         * behave consistently.
          */
         if (
             search instanceof RegExp
         ) {
 
-            return search.test(source);
+            try {
+
+                search.lastIndex = 0;
+
+                const result =
+                    search.test(source);
+
+                search.lastIndex = 0;
+
+                return result;
+
+            } catch (error) {
+
+                return false;
+            }
         }
 
 
         /*
          * Array support.
          *
-         * Returns true if at least one
-         * search value exists.
+         * Any matching item returns true.
          */
         if (
             Array.isArray(search)
@@ -95,11 +148,17 @@
         }
 
 
-        /*
-         * Convert search value to string.
-         */
         const searchText =
             String(search);
+
+
+        /*
+         * Empty search values should never
+         * match everything.
+         */
+        if (!searchText) {
+            return false;
+        }
 
 
         if (!caseSensitive) {
@@ -119,9 +178,11 @@
 
 
     /*
-     * Check whether text starts with
-     * a specific value.
+     * --------------------------------------------------
+     * startsWithText
+     * --------------------------------------------------
      */
+
     function startsWithText(
         text,
         search,
@@ -137,11 +198,17 @@
             return false;
         }
 
+
         const source =
             String(text);
 
         const value =
             String(search);
+
+
+        if (!value) {
+            return false;
+        }
 
 
         if (!caseSensitive) {
@@ -161,9 +228,11 @@
 
 
     /*
-     * Check whether text ends with
-     * a specific value.
+     * --------------------------------------------------
+     * endsWithText
+     * --------------------------------------------------
      */
+
     function endsWithText(
         text,
         search,
@@ -179,11 +248,17 @@
             return false;
         }
 
+
         const source =
             String(text);
 
         const value =
             String(search);
+
+
+        if (!value) {
+            return false;
+        }
 
 
         if (!caseSensitive) {
@@ -203,8 +278,11 @@
 
 
     /*
-     * Truncate text.
+     * --------------------------------------------------
+     * truncateText
+     * --------------------------------------------------
      */
+
     function truncateText(
         value,
         maxLength = 500
@@ -214,18 +292,30 @@
             cleanText(value);
 
 
+        const limit =
+            Number(maxLength);
+
+
         if (
-            text.length <= maxLength
+            !Number.isFinite(limit) ||
+            limit <= 0
+        ) {
+            return "";
+        }
+
+
+        if (
+            text.length <= limit
         ) {
             return text;
         }
 
 
-        if (maxLength <= 3) {
+        if (limit <= 3) {
 
             return text.substring(
                 0,
-                maxLength
+                limit
             );
         }
 
@@ -233,7 +323,7 @@
         return (
             text.substring(
                 0,
-                maxLength - 3
+                limit - 3
             ) +
             "..."
         );
@@ -241,8 +331,11 @@
 
 
     /*
-     * Convert text to lowercase safely.
+     * --------------------------------------------------
+     * normalizeText
+     * --------------------------------------------------
      */
+
     function normalizeText(value) {
 
         return cleanText(value)
@@ -251,8 +344,11 @@
 
 
     /*
-     * Check whether a value is empty.
+     * --------------------------------------------------
+     * isEmptyText
+     * --------------------------------------------------
      */
+
     function isEmptyText(value) {
 
         return cleanText(value)
@@ -261,8 +357,11 @@
 
 
     /*
-     * Remove duplicate strings.
+     * --------------------------------------------------
+     * uniqueStrings
+     * --------------------------------------------------
      */
+
     function uniqueStrings(values) {
 
         if (
@@ -270,6 +369,7 @@
         ) {
             return [];
         }
+
 
         const seen =
             new Set();
@@ -282,18 +382,22 @@
             const text =
                 cleanText(value);
 
+
             if (!text) {
                 return;
             }
 
+
             const key =
                 text.toLowerCase();
+
 
             if (
                 seen.has(key)
             ) {
                 return;
             }
+
 
             seen.add(key);
 
@@ -306,8 +410,11 @@
 
 
     /*
-     * Split text into words.
+     * --------------------------------------------------
+     * getWords
+     * --------------------------------------------------
      */
+
     function getWords(value) {
 
         const text =
@@ -326,44 +433,37 @@
 
 
     /*
-     * Export globally.
-     *
-     * PageDelta uses global functions
-     * because the extension is currently
-     * not using ES modules.
+     * --------------------------------------------------
+     * Expose globally
+     * --------------------------------------------------
      */
-    if (
-        typeof globalThis !==
-        "undefined"
-    ) {
 
-        globalThis.cleanText =
-            cleanText;
+    globalThis.cleanText =
+        cleanText;
 
-        globalThis.containsText =
-            containsText;
+    globalThis.containsText =
+        containsText;
 
-        globalThis.startsWithText =
-            startsWithText;
+    globalThis.startsWithText =
+        startsWithText;
 
-        globalThis.endsWithText =
-            endsWithText;
+    globalThis.endsWithText =
+        endsWithText;
 
-        globalThis.truncateText =
-            truncateText;
+    globalThis.truncateText =
+        truncateText;
 
-        globalThis.normalizeText =
-            normalizeText;
+    globalThis.normalizeText =
+        normalizeText;
 
-        globalThis.isEmptyText =
-            isEmptyText;
+    globalThis.isEmptyText =
+        isEmptyText;
 
-        globalThis.uniqueStrings =
-            uniqueStrings;
+    globalThis.uniqueStrings =
+        uniqueStrings;
 
-        globalThis.getWords =
-            getWords;
-    }
+    globalThis.getWords =
+        getWords;
 
 
     console.log(
