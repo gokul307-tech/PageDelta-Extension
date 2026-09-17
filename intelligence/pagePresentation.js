@@ -1,25 +1,12 @@
 /*
  * PageDelta
- * Page Presentation & Page Understanding Layer
- *
- * Converts raw analyzer output into human-friendly
- * information for the PageDelta user interface.
- *
- * IMPORTANT:
- * This layer does NOT replace the analyzer.
- * It interprets and presents its results.
+ * Purpose-Aware Page Presentation
  */
 
 (function () {
 
     "use strict";
 
-
-    /*
-     * --------------------------------------------------
-     * Utility helpers
-     * --------------------------------------------------
-     */
 
     function clean(value) {
 
@@ -28,23 +15,6 @@
             value === undefined
         ) {
             return "";
-        }
-
-
-        if (
-            typeof globalThis.cleanText ===
-            "function"
-        ) {
-
-            try {
-
-                return globalThis.cleanText(
-                    value
-                );
-
-            } catch (error) {
-                // Fall through.
-            }
         }
 
 
@@ -61,315 +31,9 @@
     }
 
 
-    function uniqueStrings(
-        values
-    ) {
-
-        const result = [];
-
-        const seen =
-            new Set();
-
-
-        if (
-            !Array.isArray(values)
-        ) {
-            return result;
-        }
-
-
-        values.forEach(
-            value => {
-
-                const text =
-                    clean(value);
-
-
-                if (!text) {
-                    return;
-                }
-
-
-                const key =
-                    normalize(text);
-
-
-                if (
-                    seen.has(key)
-                ) {
-                    return;
-                }
-
-
-                seen.add(key);
-
-                result.push(text);
-            }
-        );
-
-
-        return result;
-    }
-
-
     /*
      * --------------------------------------------------
-     * Page type detection
-     * --------------------------------------------------
-     */
-
-    const PAGE_TYPE_RULES = [
-
-        {
-            type: "Course / Learning",
-            keywords: [
-                "course",
-                "lecture",
-                "assignment",
-                "quiz",
-                "exam",
-                "nptel",
-                "learn",
-                "lesson",
-                "module",
-                "certificate",
-                "enroll"
-            ]
-        },
-
-        {
-            type: "Shopping / Product",
-            keywords: [
-                "buy",
-                "cart",
-                "checkout",
-                "price",
-                "product",
-                "add to cart",
-                "sale",
-                "discount",
-                "₹",
-                "$",
-                "in stock"
-            ]
-        },
-
-        {
-            type: "Application / Form",
-            keywords: [
-                "application form",
-                "apply now",
-                "registration form",
-                "register",
-                "application",
-                "applicant",
-                "submit"
-            ]
-        },
-
-        {
-            type: "Job / Career",
-            keywords: [
-                "job",
-                "career",
-                "vacancy",
-                "hiring",
-                "employment",
-                "resume",
-                "cv",
-                "salary",
-                "job description"
-            ]
-        },
-
-        {
-            type: "News / Article",
-            keywords: [
-                "news",
-                "breaking",
-                "report",
-                "article",
-                "published",
-                "journalist",
-                "latest"
-            ]
-        },
-
-        {
-            type: "Government / Public Information",
-            keywords: [
-                "government",
-                "ministry",
-                "citizen",
-                "election",
-                "voter",
-                "official",
-                "scheme",
-                "department",
-                "portal"
-            ]
-        },
-
-        {
-            type: "Reference / Information",
-            keywords: [
-                "wikipedia",
-                "encyclopedia",
-                "definition",
-                "history",
-                "overview",
-                "information",
-                "reference",
-                "meaning"
-            ]
-        }
-    ];
-
-
-    function detectPageType(
-        analysis
-    ) {
-
-        if (!analysis) {
-
-            return {
-                type: "Webpage",
-                confidence: 0
-            };
-        }
-
-
-        const title =
-            normalize(
-                analysis.title
-            );
-
-
-        const headings =
-            Array.isArray(
-                analysis.headings
-            )
-                ? analysis.headings
-                    .map(
-                        item =>
-                            normalize(
-                                item &&
-                                item.text
-                            )
-                    )
-                    .join(" ")
-                : "";
-
-
-        const text =
-            normalize(
-                analysis.pageText
-            )
-                .substring(
-                    0,
-                    15000
-                );
-
-
-        const source =
-            `${title} ${headings} ${text}`;
-
-
-        const scores = [];
-
-
-        PAGE_TYPE_RULES.forEach(
-            rule => {
-
-                let score = 0;
-
-                const matches = [];
-
-
-                rule.keywords.forEach(
-                    keyword => {
-
-                        if (
-                            source.includes(
-                                normalize(
-                                    keyword
-                                )
-                            )
-                        ) {
-
-                            score +=
-                                keyword.length >= 8
-                                    ? 3
-                                    : 1;
-
-                            matches.push(
-                                keyword
-                            );
-                        }
-                    }
-                );
-
-
-                if (score > 0) {
-
-                    scores.push({
-
-                        type:
-                            rule.type,
-
-                        score,
-
-                        matches
-                    });
-                }
-
-            }
-        );
-
-
-        if (!scores.length) {
-
-            return {
-                type: "Webpage",
-                confidence: 20
-            };
-        }
-
-
-        scores.sort(
-            (a, b) =>
-                b.score - a.score
-        );
-
-
-        const best =
-            scores[0];
-
-
-        const confidence =
-            Math.min(
-                95,
-                30 +
-                best.score * 8
-            );
-
-
-        return {
-
-            type:
-                best.type,
-
-            confidence,
-
-            matchedKeywords:
-                best.matches
-        };
-    }
-
-
-    /*
-     * --------------------------------------------------
-     * Purpose detection
+     * Purpose keywords
      * --------------------------------------------------
      */
 
@@ -377,48 +41,33 @@
 
         {
             purpose:
-                "Check a deadline or important date",
+                "Find an assignment or submission deadline",
 
             keywords: [
+                "assignment",
                 "deadline",
-                "due date",
-                "last date",
-                "submission date",
-                "exam date",
-                "closing date",
-                "schedule"
-            ]
-        },
-
-        {
-            purpose:
-                "Complete or submit something",
-
-            keywords: [
+                "due",
+                "submission",
                 "submit",
-                "application",
-                "apply",
-                "registration",
-                "register",
-                "form",
-                "upload"
+                "last date",
+                "closing date"
             ]
         },
 
         {
             purpose:
-                "Learn or understand the topic",
+                "Understand this topic",
 
             keywords: [
-                "course",
-                "lesson",
-                "lecture",
-                "tutorial",
                 "learn",
+                "understand",
+                "explain",
                 "definition",
+                "meaning",
+                "history",
                 "overview",
-                "explanation",
-                "wikipedia"
+                "wikipedia",
+                "article"
             ]
         },
 
@@ -429,60 +78,81 @@
             keywords: [
                 "eligibility",
                 "eligible",
-                "requirements",
                 "qualification",
+                "requirements",
                 "criteria",
-                "must be",
-                "required"
+                "required",
+                "who can apply"
             ]
         },
 
         {
             purpose:
-                "Buy or compare a product",
+                "Complete an application or form",
 
             keywords: [
-                "price",
+                "application",
+                "apply",
+                "registration",
+                "register",
+                "form",
+                "applicant",
+                "submit"
+            ]
+        },
+
+        {
+            purpose:
+                "Buy or compare something",
+
+            keywords: [
                 "buy",
                 "purchase",
+                "price",
+                "product",
                 "cart",
                 "checkout",
-                "discount",
                 "sale",
-                "product"
+                "discount"
             ]
         },
 
         {
             purpose:
-                "Find information or news",
-
-            keywords: [
-                "news",
-                "latest",
-                "information",
-                "article",
-                "report",
-                "update"
-            ]
-        },
-
-        {
-            purpose:
-                "Find a job or career opportunity",
+                "Find a job",
 
             keywords: [
                 "job",
                 "career",
                 "vacancy",
                 "hiring",
+                "employment",
                 "salary",
-                "resume",
-                "apply"
+                "resume"
+            ]
+        },
+
+        {
+            purpose:
+                "Find recent news or updates",
+
+            keywords: [
+                "news",
+                "latest",
+                "update",
+                "breaking",
+                "report",
+                "published"
             ]
         }
     ];
 
+
+    /*
+     * --------------------------------------------------
+     * Detect purpose
+     * --------------------------------------------------
+     */
 
     function detectPagePurpose(
         analysis
@@ -509,104 +179,56 @@
             );
 
 
-        const headingText =
+        const headings =
             Array.isArray(
                 analysis.headings
             )
                 ? analysis.headings
                     .map(
-                        item =>
+                        heading =>
                             normalize(
-                                item &&
-                                item.text
+                                typeof heading ===
+                                "string"
+                                    ? heading
+                                    : (
+                                        heading &&
+                                        (
+                                            heading.text ||
+                                            heading.title ||
+                                            ""
+                                        )
+                                    )
                             )
                     )
                     .join(" ")
                 : "";
 
 
-        const keywordText =
-            Array.isArray(
-                analysis.keywords
-            )
-                ? analysis.keywords
-                    .map(
-                        item => {
-
-                            if (
-                                typeof item ===
-                                "string"
-                            ) {
-                                return normalize(
-                                    item
-                                );
-                            }
-
-
-                            return normalize(
-                                item &&
-                                (
-                                    item.keyword ||
-                                    item.text ||
-                                    item.value ||
-                                    ""
-                                )
-                            );
-                        }
-                    )
-                    .join(" ")
-                : "";
-
-
-        const pageText =
+        const text =
             normalize(
                 analysis.pageText
             )
-                .substring(
+                .slice(
                     0,
-                    20000
+                    25000
                 );
 
 
-        /*
-         * Title and headings receive higher weight
-         * because they usually describe the actual
-         * page better than repeated body text.
-         */
-
-        const weightedSources = [
-
-            {
-                text: title,
-                weight: 5
-            },
-
-            {
-                text: headingText,
-                weight: 4
-            },
-
-            {
-                text: keywordText,
-                weight: 2
-            },
-
-            {
-                text: pageText,
-                weight: 1
-            }
-        ];
+        const source =
+            `${title} ${headings} ${text}`;
 
 
-        const scores = [];
+        const results = [];
 
 
         PURPOSE_RULES.forEach(
             rule => {
 
-                let score = 0;
+                let score =
+                    0;
 
-                const matched = [];
+                const matches =
+                    [];
 
 
                 rule.keywords.forEach(
@@ -618,25 +240,49 @@
                             );
 
 
-                        weightedSources.forEach(
-                            source => {
+                        if (
+                            title.includes(
+                                normalizedKeyword
+                            )
+                        ) {
 
-                                if (
-                                    source.text.includes(
-                                        normalizedKeyword
-                                    )
-                                ) {
+                            score +=
+                                8;
 
-                                    score +=
-                                        source.weight;
+                            matches.push(
+                                keyword
+                            );
+                        }
 
-                                    matched.push(
-                                        keyword
-                                    );
-                                }
 
-                            }
-                        );
+                        if (
+                            headings.includes(
+                                normalizedKeyword
+                            )
+                        ) {
+
+                            score +=
+                                6;
+
+                            matches.push(
+                                keyword
+                            );
+                        }
+
+
+                        if (
+                            text.includes(
+                                normalizedKeyword
+                            )
+                        ) {
+
+                            score +=
+                                2;
+
+                            matches.push(
+                                keyword
+                            );
+                        }
 
                     }
                 );
@@ -644,17 +290,19 @@
 
                 if (score > 0) {
 
-                    scores.push({
+                    results.push({
 
                         purpose:
                             rule.purpose,
 
                         score,
 
-                        matchedKeywords:
-                            uniqueStrings(
-                                matched
-                            )
+                        matches:
+                            [
+                                ...new Set(
+                                    matches
+                                )
+                            ]
                     });
                 }
 
@@ -662,7 +310,14 @@
         );
 
 
-        if (!scores.length) {
+        results.sort(
+            (a, b) =>
+                b.score -
+                a.score
+        );
+
+
+        if (!results.length) {
 
             return {
 
@@ -670,29 +325,15 @@
                     "Understand this webpage",
 
                 confidence:
-                    25,
+                    20,
 
                 alternatives: []
             };
         }
 
 
-        scores.sort(
-            (a, b) =>
-                b.score - a.score
-        );
-
-
         const best =
-            scores[0];
-
-
-        const confidence =
-            Math.min(
-                95,
-                35 +
-                best.score * 3
-            );
+            results[0];
 
 
         return {
@@ -700,17 +341,22 @@
             purpose:
                 best.purpose,
 
-            confidence,
+            confidence:
+                Math.min(
+                    95,
+                    30 +
+                    best.score * 2
+                ),
 
             matchedKeywords:
-                best.matchedKeywords,
+                best.matches,
 
             alternatives:
-                scores
+                results
                     .slice(1, 4)
                     .map(
-                        item =>
-                            item.purpose
+                        result =>
+                            result.purpose
                     )
         };
     }
@@ -718,11 +364,368 @@
 
     /*
      * --------------------------------------------------
-     * Human-friendly requirement formatting
+     * User purpose scoring
      * --------------------------------------------------
      */
 
-    function extractRequirementText(
+    const USER_PURPOSE_GROUPS = {
+
+        deadline: [
+            "deadline",
+            "assignment",
+            "submission",
+            "due",
+            "last date",
+            "closing date",
+            "exam date"
+        ],
+
+        learning: [
+            "learn",
+            "understand",
+            "explain",
+            "definition",
+            "meaning",
+            "history",
+            "overview",
+            "topic"
+        ],
+
+        eligibility: [
+            "eligibility",
+            "eligible",
+            "qualification",
+            "requirement",
+            "criteria",
+            "who can apply"
+        ],
+
+        form: [
+            "form",
+            "application",
+            "apply",
+            "registration",
+            "register",
+            "submit"
+        ],
+
+        shopping: [
+            "buy",
+            "price",
+            "purchase",
+            "product",
+            "sale",
+            "discount",
+            "cart"
+        ],
+
+        job: [
+            "job",
+            "career",
+            "vacancy",
+            "hiring",
+            "salary",
+            "resume"
+        ],
+
+        news: [
+            "news",
+            "latest",
+            "update",
+            "breaking",
+            "report"
+        ]
+    };
+
+
+    function detectUserPurposeType(
+        purpose
+    ) {
+
+        const source =
+            normalize(
+                purpose
+            );
+
+
+        let bestType =
+            "general";
+
+        let bestScore =
+            0;
+
+
+        Object.entries(
+            USER_PURPOSE_GROUPS
+        ).forEach(
+            ([type, keywords]) => {
+
+                let score =
+                    0;
+
+
+                keywords.forEach(
+                    keyword => {
+
+                        if (
+                            source.includes(
+                                normalize(
+                                    keyword
+                                )
+                            )
+                        ) {
+
+                            score +=
+                                keyword.length >= 7
+                                    ? 3
+                                    : 1;
+                        }
+                    }
+                );
+
+
+                if (
+                    score >
+                    bestScore
+                ) {
+
+                    bestScore =
+                        score;
+
+                    bestType =
+                        type;
+                }
+
+            }
+        );
+
+
+        return bestType;
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Information scoring
+     * --------------------------------------------------
+     */
+
+    function scoreInformation(
+        item,
+        purpose
+    ) {
+
+        const type =
+            detectUserPurposeType(
+                purpose
+            );
+
+
+        const text =
+            normalize(
+                [
+                    item.title,
+                    item.text,
+                    item.description,
+                    item.type
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+            );
+
+
+        let score =
+            0;
+
+
+        /*
+         * Purpose-specific priorities.
+         */
+
+        if (
+            type ===
+            "deadline"
+        ) {
+
+            if (
+                item.type ===
+                "deadline"
+            ) {
+                score += 100;
+            }
+
+
+            if (
+                text.includes(
+                    "assignment"
+                )
+            ) {
+                score += 60;
+            }
+
+
+            if (
+                text.includes(
+                    "submission"
+                )
+            ) {
+                score += 50;
+            }
+
+
+            if (
+                item.type ===
+                "action"
+            ) {
+                score += 25;
+            }
+
+        }
+
+
+        if (
+            type ===
+            "eligibility"
+        ) {
+
+            if (
+                item.type ===
+                "requirement"
+            ) {
+                score += 100;
+            }
+
+
+            if (
+                text.includes(
+                    "eligible"
+                )
+            ) {
+                score += 50;
+            }
+
+
+            if (
+                text.includes(
+                    "qualification"
+                )
+            ) {
+                score += 45;
+            }
+
+        }
+
+
+        if (
+            type ===
+            "form"
+        ) {
+
+            if (
+                item.type ===
+                "field"
+            ) {
+                score += 100;
+            }
+
+
+            if (
+                item.type ===
+                "action"
+            ) {
+                score += 45;
+            }
+
+        }
+
+
+        if (
+            type ===
+            "shopping"
+        ) {
+
+            if (
+                item.type ===
+                "price"
+            ) {
+                score += 100;
+            }
+
+
+            if (
+                text.includes(
+                    "discount"
+                )
+            ) {
+                score += 50;
+            }
+
+        }
+
+
+        if (
+            type ===
+            "job"
+        ) {
+
+            if (
+                item.type ===
+                "requirement"
+            ) {
+                score += 55;
+            }
+
+
+            if (
+                item.type ===
+                "action"
+            ) {
+                score += 40;
+            }
+
+        }
+
+
+        if (
+            type ===
+            "news"
+        ) {
+
+            if (
+                text.includes(
+                    "latest"
+                ) ||
+                text.includes(
+                    "update"
+                )
+            ) {
+                score += 50;
+            }
+
+        }
+
+
+        /*
+         * Generic importance.
+         */
+
+        score +=
+            Number(
+                item.priority
+            ) || 0;
+
+
+        return score;
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Requirements
+     * --------------------------------------------------
+     */
+
+    function getRequirementText(
         requirement
     ) {
 
@@ -742,129 +745,51 @@
         }
 
 
-        /*
-         * Prefer context because the current
-         * analyzer often places the useful
-         * human-readable requirement there.
-         */
+        return clean(
 
-        const candidates = [
+            requirement.context ||
 
-            requirement.text,
+            requirement.text ||
 
-            requirement.description,
+            requirement.description ||
 
-            requirement.context,
+            requirement.requirement ||
 
-            requirement.value,
+            requirement.value ||
 
-            requirement.message,
+            requirement.message ||
 
-            requirement.requirement
-        ];
-
-
-        for (
-            const candidate of candidates
-        ) {
-
-            const text =
-                clean(candidate);
-
-
-            if (text) {
-
-                return text;
-            }
-        }
-
-
-        return "";
+            ""
+        );
     }
 
 
-    function simplifyRequirement(
-        requirement
-    ) {
-
-        const text =
-            extractRequirementText(
-                requirement
-            );
-
-
-        if (!text) {
-            return null;
-        }
-
-
-        /*
-         * Remove repeated whitespace.
-         */
-
-        let result =
-            text.replace(
-                /\s+/g,
-                " "
-            ).trim();
-
-
-        /*
-         * Remove accidental leading
-         * punctuation.
-         */
-
-        result =
-            result.replace(
-                /^[\s:;-]+/,
-                ""
-            );
-
-
-        /*
-         * Avoid extremely long cards.
-         */
-
-        if (
-            result.length > 500
-        ) {
-
-            result =
-                result.substring(
-                    0,
-                    497
-                ) +
-                "...";
-        }
-
-
-        return result;
-    }
-
-
-    function deduplicateRequirements(
-        requirements
+    function getRequirements(
+        analysis
     ) {
 
         if (
             !Array.isArray(
-                requirements
+                analysis.requirements
             )
         ) {
             return [];
         }
 
 
-        const results = [];
+        const result =
+            [];
 
-        const seen = [];
+
+        const seen =
+            new Set();
 
 
-        requirements.forEach(
+        analysis.requirements.forEach(
             requirement => {
 
                 const text =
-                    simplifyRequirement(
+                    getRequirementText(
                         requirement
                     );
 
@@ -874,481 +799,380 @@
                 }
 
 
-                const normalized =
-                    normalize(text);
-
-
-                /*
-                 * Exact duplicate.
-                 */
-
-                if (
-                    seen.includes(
-                        normalized
-                    )
-                ) {
-                    return;
-                }
-
-
-                /*
-                 * Detect near-duplicates.
-                 *
-                 * If one requirement contains the
-                 * other, keep the longer one.
-                 */
-
-                const duplicateIndex =
-                    seen.findIndex(
-                        existing =>
-                            existing.includes(
-                                normalized
-                            ) ||
-                            normalized.includes(
-                                existing
-                            )
+                const key =
+                    normalize(
+                        text
                     );
 
 
                 if (
-                    duplicateIndex !== -1
+                    seen.has(key)
                 ) {
-
-                    if (
-                        normalized.length >
-                        seen[
-                            duplicateIndex
-                        ].length
-                    ) {
-
-                        results[
-                            duplicateIndex
-                        ] = text;
-
-                        seen[
-                            duplicateIndex
-                        ] = normalized;
-                    }
-
-
                     return;
                 }
 
 
-                seen.push(
-                    normalized
-                );
+                seen.add(key);
 
 
-                results.push(
-                    text
-                );
+                result.push({
+
+                    type:
+                        "requirement",
+
+                    icon:
+                        "📋",
+
+                    title:
+                        "Requirement",
+
+                    text,
+
+                    priority:
+                        80
+                });
+
             }
         );
 
 
-        return results;
+        return result;
     }
 
 
     /*
      * --------------------------------------------------
-     * Deadline formatting
+     * Fields
      * --------------------------------------------------
      */
 
-    function formatDeadline(
-        deadline
-    ) {
-
-        if (
-            typeof deadline ===
-            "string"
-        ) {
-
-            return {
-
-                title:
-                    "Important date",
-
-                text:
-                    clean(deadline)
-            };
-        }
-
-
-        if (!deadline) {
-            return null;
-        }
-
-
-        const title =
-            clean(
-                deadline.title ||
-                deadline.name ||
-                deadline.label ||
-                "Important date"
-            );
-
-
-        const text =
-            clean(
-                deadline.text ||
-                deadline.description ||
-                deadline.context ||
-                deadline.value ||
-                deadline.date ||
-                ""
-            );
-
-
-        if (
-            !title &&
-            !text
-        ) {
-            return null;
-        }
-
-
-        return {
-
-            title:
-                title ||
-                "Important date",
-
-            text:
-                text ||
-                title
-        };
-    }
-
-
-    /*
-     * --------------------------------------------------
-     * Priority information
-     * --------------------------------------------------
-     */
-
-    function buildImportantInformation(
+    function getFields(
         analysis
     ) {
 
-        const items = [];
-
-
-        /*
-         * Deadlines are important.
-         */
-
         if (
-            Array.isArray(
-                analysis.deadlines
+            !Array.isArray(
+                analysis.fields
             )
         ) {
-
-            analysis.deadlines
-                .slice(0, 5)
-                .forEach(
-                    deadline => {
-
-                        const item =
-                            formatDeadline(
-                                deadline
-                            );
+            return [];
+        }
 
 
-                        if (item) {
+        let fields =
+            analysis.fields;
 
-                            items.push({
 
-                                type:
-                                    "deadline",
+        if (
+            typeof getUniqueClassifiedFields ===
+            "function"
+        ) {
 
-                                icon:
-                                    "📅",
+            fields =
+                getUniqueClassifiedFields(
+                    fields
+                );
 
-                                title:
-                                    item.title,
+        } else if (
+            typeof classifyFields ===
+            "function"
+        ) {
 
-                                text:
-                                    item.text,
-
-                                priority:
-                                    100
-                            });
-                        }
-
-                    }
+            fields =
+                classifyFields(
+                    fields
                 );
         }
 
 
-        /*
-         * Requirements.
-         */
+        return fields
+            .filter(
+                field =>
+                    !field.disabled
+            )
+            .map(
+                field => ({
 
-        const requirements =
-            deduplicateRequirements(
-                analysis.requirements
+                    type:
+                        "field",
+
+                    icon:
+                        "📝",
+
+                    title:
+                        field.fieldLabel ||
+                        "Information",
+
+                    text:
+                        field.required
+                            ? "Required field"
+                            : "Information requested",
+
+                    fieldType:
+                        field.fieldType ||
+                        "unknown",
+
+                    confidence:
+                        field.confidence ||
+                        0,
+
+                    required:
+                        field.required === true,
+
+                    selector:
+                        field.selector,
+
+                    priority:
+                        field.required
+                            ? 90
+                            : 70
+
+                })
             );
+    }
 
 
-        requirements
-            .slice(0, 5)
-            .forEach(
-                text => {
+    /*
+     * --------------------------------------------------
+     * Deadlines
+     * --------------------------------------------------
+     */
 
-                    items.push({
+    function getDeadlines(
+        analysis
+    ) {
+
+        if (
+            !Array.isArray(
+                analysis.deadlines
+            )
+        ) {
+            return [];
+        }
+
+
+        return analysis.deadlines
+            .map(
+                deadline => {
+
+                    if (
+                        typeof deadline ===
+                        "string"
+                    ) {
+
+                        return {
+
+                            type:
+                                "deadline",
+
+                            icon:
+                                "📅",
+
+                            title:
+                                "Important date",
+
+                            text:
+                                clean(
+                                    deadline
+                                ),
+
+                            priority:
+                                100
+                        };
+                    }
+
+
+                    if (!deadline) {
+                        return null;
+                    }
+
+
+                    return {
 
                         type:
-                            "requirement",
+                            "deadline",
 
                         icon:
-                            "📋",
+                            "📅",
 
                         title:
-                            "Requirement",
+                            clean(
+                                deadline.title ||
+                                deadline.name ||
+                                deadline.label ||
+                                "Important date"
+                            ),
+
+                        text:
+                            clean(
+                                deadline.text ||
+                                deadline.description ||
+                                deadline.context ||
+                                deadline.date ||
+                                deadline.value ||
+                                ""
+                            ),
+
+                        priority:
+                            100
+                    };
+
+                }
+            )
+            .filter(
+                Boolean
+            );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Actions
+     * --------------------------------------------------
+     */
+
+    function getActions(
+        analysis
+    ) {
+
+        if (
+            !Array.isArray(
+                analysis.actions
+            )
+        ) {
+            return [];
+        }
+
+
+        return analysis.actions
+            .map(
+                action => {
+
+                    if (!action) {
+                        return null;
+                    }
+
+
+                    const text =
+                        clean(
+                            action.label ||
+                            action.text ||
+                            action.description ||
+                            action.keyword ||
+                            action.type ||
+                            ""
+                        );
+
+
+                    if (!text) {
+                        return null;
+                    }
+
+
+                    return {
+
+                        type:
+                            "action",
+
+                        icon:
+                            "⚡",
+
+                        title:
+                            "Action",
 
                         text,
 
                         priority:
-                            80
-                    });
+                            50
+                    };
 
                 }
+            )
+            .filter(
+                Boolean
             );
-
-
-        /*
-         * Actions.
-         */
-
-        if (
-            Array.isArray(
-                analysis.actions
-            )
-        ) {
-
-            const seen =
-                new Set();
-
-
-            analysis.actions
-                .forEach(
-                    action => {
-
-                        if (!action) {
-                            return;
-                        }
-
-
-                        const label =
-                            clean(
-                                action.label ||
-                                action.text ||
-                                action.keyword ||
-                                action.type ||
-                                ""
-                            );
-
-
-                        if (!label) {
-                            return;
-                        }
-
-
-                        const key =
-                            normalize(
-                                label
-                            );
-
-
-                        if (
-                            seen.has(key)
-                        ) {
-                            return;
-                        }
-
-
-                        seen.add(key);
-
-
-                        items.push({
-
-                            type:
-                                "action",
-
-                            icon:
-                                "⚡",
-
-                            title:
-                                "Action available",
-
-                            text:
-                                label,
-
-                            priority:
-                                action.requiresConfirmation
-                                    ? 70
-                                    : 50
-                        });
-                    }
-                );
-        }
-
-
-        /*
-         * Prices.
-         */
-
-        if (
-            Array.isArray(
-                analysis.prices
-            )
-        ) {
-
-            analysis.prices
-                .slice(0, 3)
-                .forEach(
-                    price => {
-
-                        const text =
-                            clean(
-                                typeof price ===
-                                "string"
-                                    ? price
-                                    : (
-                                        price &&
-                                        (
-                                            price.text ||
-                                            price.value ||
-                                            price.price ||
-                                            ""
-                                        )
-                                    )
-                            );
-
-
-                        if (!text) {
-                            return;
-                        }
-
-
-                        items.push({
-
-                            type:
-                                "price",
-
-                            icon:
-                                "💰",
-
-                            title:
-                                "Price",
-
-                            text,
-
-                            priority:
-                                40
-                        });
-
-                    }
-                );
-        }
-
-
-        items.sort(
-            (a, b) =>
-                b.priority -
-                a.priority
-        );
-
-
-        return items.slice(
-            0,
-            8
-        );
     }
 
 
     /*
      * --------------------------------------------------
-     * Page summary
+     * Prices
      * --------------------------------------------------
      */
 
-    function createPageSummary(
+    function getPrices(
         analysis
     ) {
 
-        if (!analysis) {
-
-            return {
-                text:
-                    "Page information is not available."
-            };
-        }
-
-
-        const type =
-            detectPageType(
-                analysis
-            );
-
-
-        const title =
-            clean(
-                analysis.title
-            );
-
-
         if (
-            title &&
-            type.type !== "Webpage"
+            !Array.isArray(
+                analysis.prices
+            )
         ) {
-
-            return {
-
-                text:
-                    `${type.type} page: ${title}.`,
-
-                type:
-                    type.type
-            };
+            return [];
         }
 
 
-        if (title) {
+        return analysis.prices
+            .map(
+                price => {
 
-            return {
+                    const text =
+                        clean(
+                            typeof price ===
+                            "string"
+                                ? price
+                                : (
+                                    price &&
+                                    (
+                                        price.text ||
+                                        price.price ||
+                                        price.value ||
+                                        price.amount ||
+                                        ""
+                                    )
+                                )
+                        );
 
-                text:
-                    `Information about ${title}.`,
 
-                type:
-                    type.type
-            };
-        }
+                    if (!text) {
+                        return null;
+                    }
 
 
-        return {
+                    return {
 
-            text:
-                "Information from the current webpage.",
+                        type:
+                            "price",
 
-            type:
-                type.type
-        };
+                        icon:
+                            "💰",
+
+                        title:
+                            "Price",
+
+                        text,
+
+                        priority:
+                            40
+                    };
+                }
+            )
+            .filter(
+                Boolean
+            );
     }
 
 
     /*
      * --------------------------------------------------
-     * Complete presentation object
+     * Build presentation
      * --------------------------------------------------
      */
 
     function createPagePresentation(
-        analysis
+        analysis,
+        userPurpose = ""
     ) {
 
         if (!analysis) {
@@ -1356,64 +1180,88 @@
         }
 
 
-        const pageType =
-            detectPageType(
-                analysis
-            );
-
-
-        const purpose =
+        const detectedPurpose =
             detectPagePurpose(
                 analysis
             );
 
 
-        const summary =
-            createPageSummary(
-                analysis
+        const activePurpose =
+            clean(
+                userPurpose
+            ) ||
+            detectedPurpose.purpose;
+
+
+        const purposeType =
+            detectUserPurposeType(
+                activePurpose
             );
 
+
+        const allInformation = [
+
+            ...getFields(
+                analysis
+            ),
+
+            ...getDeadlines(
+                analysis
+            ),
+
+            ...getRequirements(
+                analysis
+            ),
+
+            ...getActions(
+                analysis
+            ),
+
+            ...getPrices(
+                analysis
+            )
+
+        ];
+
+
+        /*
+         * Purpose-aware sorting.
+         */
+
+        allInformation.forEach(
+            item => {
+
+                item.relevanceScore =
+                    scoreInformation(
+                        item,
+                        activePurpose
+                    );
+            }
+        );
+
+
+        allInformation.sort(
+            (a, b) =>
+                b.relevanceScore -
+                a.relevanceScore
+        );
+
+
+        /*
+         * Keep the number manageable.
+         */
 
         const importantInformation =
-            buildImportantInformation(
-                analysis
+            allInformation.slice(
+                0,
+                10
             );
-
-
-        const fieldCount =
-            Array.isArray(
-                analysis.fields
-            )
-                ? analysis.fields.length
-                : 0;
-
-
-        const actionCount =
-            Array.isArray(
-                analysis.actions
-            )
-                ? analysis.actions.length
-                : 0;
-
-
-        const deadlineCount =
-            Array.isArray(
-                analysis.deadlines
-            )
-                ? analysis.deadlines.length
-                : 0;
-
-
-        const requirementCount =
-            deduplicateRequirements(
-                analysis.requirements
-            ).length;
 
 
         return {
 
             version:
-                "1.0.0",
+                "1.1.0",
 
             title:
                 clean(
@@ -1425,34 +1273,72 @@
                 analysis.url ||
                 window.location.href,
 
-            pageType,
+            summary: {
 
-            summary,
+                text:
+                    createSummary(
+                        analysis
+                    )
+            },
 
-            purpose,
+            detectedPurpose,
+
+            purpose: {
+
+                purpose:
+                    activePurpose,
+
+                type:
+                    purposeType,
+
+                confidence:
+                    userPurpose
+                        ? 100
+                        : detectedPurpose.confidence,
+
+                userProvided:
+                    Boolean(
+                        userPurpose
+                    ),
+
+                alternatives:
+                    detectedPurpose.alternatives ||
+                    []
+            },
 
             importantInformation,
+
+            fields:
+                getFields(
+                    analysis
+                ),
 
             counts: {
 
                 fields:
-                    fieldCount,
-
-                actions:
-                    actionCount,
+                    getFields(
+                        analysis
+                    ).length,
 
                 deadlines:
-                    deadlineCount,
+                    getDeadlines(
+                        analysis
+                    ).length,
 
                 requirements:
-                    requirementCount,
+                    getRequirements(
+                        analysis
+                    ).length,
+
+                actions:
+                    getActions(
+                        analysis
+                    ).length,
 
                 prices:
-                    Array.isArray(
-                        analysis.prices
-                    )
-                        ? analysis.prices.length
-                        : 0
+                    getPrices(
+                        analysis
+                    ).length
             },
 
             importance: {
@@ -1470,38 +1356,64 @@
     }
 
 
+    function createSummary(
+        analysis
+    ) {
+
+        const title =
+            clean(
+                analysis.title
+            );
+
+
+        if (title) {
+
+            return `This page contains information about ${title}.`;
+        }
+
+
+        return (
+            "PageDelta found information on this webpage."
+        );
+    }
+
+
     /*
      * --------------------------------------------------
-     * Export
+     * Re-analysis using user purpose
      * --------------------------------------------------
      */
 
-    globalThis.detectPageType =
-        detectPageType;
+    function createPurposeAwarePresentation(
+        analysis,
+        userPurpose
+    ) {
+
+        return createPagePresentation(
+            analysis,
+            userPurpose
+        );
+    }
 
 
     globalThis.detectPagePurpose =
         detectPagePurpose;
 
 
-    globalThis.deduplicateRequirements =
-        deduplicateRequirements;
-
-
-    globalThis.buildImportantInformation =
-        buildImportantInformation;
-
-
-    globalThis.createPageSummary =
-        createPageSummary;
-
-
     globalThis.createPagePresentation =
         createPagePresentation;
 
 
+    globalThis.createPurposeAwarePresentation =
+        createPurposeAwarePresentation;
+
+
+    globalThis.detectUserPurposeType =
+        detectUserPurposeType;
+
+
     console.log(
-        "[PageDelta] Page presentation layer loaded."
+        "[PageDelta] Purpose-aware presentation loaded."
     );
 
 })();
