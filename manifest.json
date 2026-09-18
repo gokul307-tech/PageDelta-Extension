@@ -67,7 +67,9 @@
 
                 "content/floatingPanel.js",
                 "content/pageObserver.js",
-                "content/content.js"
+                "content/content.js",
+
+                "storage/informationVault.js"
             ],
             "css": [
                 "content/content.css",
