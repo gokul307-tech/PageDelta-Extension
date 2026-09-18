@@ -2,8 +2,14 @@
  * PageDelta
  * Form Field Classification Engine
  *
- * Converts raw HTML form fields into meaningful,
- * human-readable field types.
+ * Responsibilities:
+ * 1. Understand webpage form fields.
+ * 2. Classify them into PageDelta field types.
+ * 3. Map them to Information Vault fields.
+ * 4. Detect protected/sensitive fields.
+ *
+ * IMPORTANT:
+ * This file DOES NOT fill any webpage fields.
  */
 
 (function () {
@@ -11,195 +17,335 @@
     "use strict";
 
 
-    const FIELD_PATTERNS = {
+    /*
+     * --------------------------------------------------
+     * Field definitions
+     * --------------------------------------------------
+     *
+     * vaultKey is the exact field name used by
+     * storage/informationVault.js.
+     */
 
-        full_name: [
-            "full name",
-            "fullname",
-            "applicant name",
-            "candidate name",
-            "your name",
-            "name"
-        ],
+    const FIELD_DEFINITIONS = {
 
-        first_name: [
-            "first name",
-            "firstname",
-            "given name",
-            "givenname"
-        ],
+        full_name: {
+            vaultKey: "fullName",
+            label: "Full name",
+            patterns: [
+                "full name",
+                "fullname",
+                "applicant name",
+                "candidate name",
+                "your name"
+            ]
+        },
 
-        last_name: [
-            "last name",
-            "lastname",
-            "surname",
-            "family name"
-        ],
+        first_name: {
+            vaultKey: "firstName",
+            label: "First name",
+            patterns: [
+                "first name",
+                "firstname",
+                "given name",
+                "givenname"
+            ]
+        },
 
-        email: [
-            "email",
-            "e-mail",
-            "email address",
-            "emailaddress"
-        ],
+        last_name: {
+            vaultKey: "lastName",
+            label: "Last name",
+            patterns: [
+                "last name",
+                "lastname",
+                "surname",
+                "family name"
+            ]
+        },
 
-        phone: [
-            "phone",
-            "phone number",
-            "mobile",
-            "mobile number",
-            "telephone",
-            "telephone number",
-            "contact number"
-        ],
+        email: {
+            vaultKey: "email",
+            label: "Email address",
+            patterns: [
+                "email",
+                "e-mail",
+                "email address",
+                "emailaddress"
+            ]
+        },
 
-        date_of_birth: [
-            "date of birth",
-            "dateofbirth",
-            "dob",
-            "birth date",
-            "birthdate",
-            "birthday"
-        ],
+        phone: {
+            vaultKey: "phone",
+            label: "Phone number",
+            patterns: [
+                "phone",
+                "phone number",
+                "mobile",
+                "mobile number",
+                "telephone",
+                "telephone number",
+                "contact number"
+            ]
+        },
 
-        address: [
-            "address",
-            "street address",
-            "home address",
-            "residential address",
-            "mailing address",
-            "permanent address"
-        ],
+        date_of_birth: {
+            vaultKey: "dateOfBirth",
+            label: "Date of birth",
+            patterns: [
+                "date of birth",
+                "dateofbirth",
+                "dob",
+                "birth date",
+                "birthdate",
+                "birthday"
+            ]
+        },
 
-        city: [
-            "city",
-            "town"
-        ],
+        gender: {
+            vaultKey: "gender",
+            label: "Gender",
+            patterns: [
+                "gender",
+                "sex"
+            ]
+        },
 
-        state: [
-            "state",
-            "province",
-            "region"
-        ],
+        address: {
+            vaultKey: "address",
+            label: "Address",
+            patterns: [
+                "address",
+                "street address",
+                "home address",
+                "residential address",
+                "mailing address",
+                "permanent address"
+            ]
+        },
 
-        country: [
-            "country",
-            "nation"
-        ],
+        city: {
+            vaultKey: "city",
+            label: "City",
+            patterns: [
+                "city",
+                "town"
+            ]
+        },
 
-        postal_code: [
-            "zip",
-            "zip code",
-            "postal",
-            "postal code",
-            "pincode",
-            "pin code",
-            "postcode"
-        ],
+        state: {
+            vaultKey: "state",
+            label: "State",
+            patterns: [
+                "state",
+                "province",
+                "region"
+            ]
+        },
 
-        username: [
-            "username",
-            "user name",
-            "login name",
-            "login"
-        ],
+        country: {
+            vaultKey: "country",
+            label: "Country",
+            patterns: [
+                "country",
+                "nation"
+            ]
+        },
 
-        password: [
-            "password",
-            "passcode",
-            "confirm password",
-            "new password",
-            "current password"
-        ],
+        postal_code: {
+            vaultKey: "postalCode",
+            label: "Postal / PIN code",
+            patterns: [
+                "zip",
+                "zip code",
+                "postal",
+                "postal code",
+                "pincode",
+                "pin code",
+                "postcode"
+            ]
+        },
 
-        gender: [
-            "gender",
-            "sex"
-        ],
+        college: {
+            vaultKey: "college",
+            label: "College / Institution",
+            patterns: [
+                "college",
+                "college name",
+                "institution",
+                "institution name",
+                "university",
+                "university name"
+            ]
+        },
 
-        age: [
-            "age"
-        ],
+        course: {
+            vaultKey: "course",
+            label: "Course",
+            patterns: [
+                "course",
+                "degree",
+                "program",
+                "programme"
+            ]
+        },
 
-        amount: [
-            "amount",
-            "price",
-            "payment amount"
-        ],
+        department: {
+            vaultKey: "department",
+            label: "Department",
+            patterns: [
+                "department",
+                "branch",
+                "stream",
+                "specialization",
+                "specialisation"
+            ]
+        },
 
-        quantity: [
-            "quantity",
-            "qty"
-        ],
+        registration_number: {
+            vaultKey: "registrationNumber",
+            label: "Registration / Roll number",
+            patterns: [
+                "registration number",
+                "registration no",
+                "registration id",
+                "roll number",
+                "roll no",
+                "student id",
+                "student number",
+                "admission number"
+            ]
+        },
 
-        date: [
-            "date",
-            "start date",
-            "end date"
-        ]
+        skills: {
+            vaultKey: "skills",
+            label: "Skills",
+            patterns: [
+                "skills",
+                "technical skills",
+                "skill set",
+                "programming skills"
+            ]
+        },
+
+
+        /*
+         * --------------------------------------------------
+         * Protected fields
+         * --------------------------------------------------
+         *
+         * These NEVER receive automatic vault mappings.
+         */
+
+        password: {
+            vaultKey: null,
+            label: "Password",
+            protected: true,
+            patterns: [
+                "password",
+                "passwd",
+                "passcode",
+                "pwd",
+                "confirm password",
+                "new password",
+                "current password"
+            ]
+        },
+
+        otp: {
+            vaultKey: null,
+            label: "OTP / Verification code",
+            protected: true,
+            patterns: [
+                "otp",
+                "one time password",
+                "one-time password",
+                "verification code",
+                "verification otp",
+                "security code"
+            ]
+        },
+
+        pin: {
+            vaultKey: null,
+            label: "PIN",
+            protected: true,
+            patterns: [
+                "pin",
+                "security pin",
+                "transaction pin"
+            ]
+        },
+
+        card_number: {
+            vaultKey: null,
+            label: "Card number",
+            protected: true,
+            patterns: [
+                "card number",
+                "credit card",
+                "credit card number",
+                "debit card",
+                "debit card number"
+            ]
+        },
+
+        cvv: {
+            vaultKey: null,
+            label: "CVV / CVC",
+            protected: true,
+            patterns: [
+                "cvv",
+                "cvc",
+                "security code on card"
+            ]
+        },
+
+        bank_account: {
+            vaultKey: null,
+            label: "Bank account",
+            protected: true,
+            patterns: [
+                "bank account",
+                "account number",
+                "bank account number"
+            ]
+        },
+
+        government_id: {
+            vaultKey: null,
+            label: "Government ID",
+            protected: true,
+            patterns: [
+                "aadhaar",
+                "aadhar",
+                "pan number",
+                "passport number",
+                "driving license",
+                "driving licence",
+                "government id",
+                "government identification"
+            ]
+        },
+
+        username: {
+            vaultKey: null,
+            label: "Username",
+            protected: true,
+            patterns: [
+                "username",
+                "user name",
+                "login name",
+                "login id"
+            ]
+        }
+
     };
 
 
-    const FIELD_LABELS = {
-
-        full_name:
-            "Full name",
-
-        first_name:
-            "First name",
-
-        last_name:
-            "Last name",
-
-        email:
-            "Email address",
-
-        phone:
-            "Phone number",
-
-        date_of_birth:
-            "Date of birth",
-
-        address:
-            "Address",
-
-        city:
-            "City",
-
-        state:
-            "State",
-
-        country:
-            "Country",
-
-        postal_code:
-            "Postal / PIN code",
-
-        username:
-            "Username",
-
-        password:
-            "Password",
-
-        gender:
-            "Gender",
-
-        age:
-            "Age",
-
-        amount:
-            "Amount",
-
-        quantity:
-            "Quantity",
-
-        date:
-            "Date",
-
-        unknown:
-            "Other information"
-    };
-
+    /*
+     * --------------------------------------------------
+     * Normalization
+     * --------------------------------------------------
+     */
 
     function normalizeText(value) {
 
@@ -210,7 +356,6 @@
             return "";
         }
 
-
         return String(value)
             .toLowerCase()
             .replace(/[_-]+/g, " ")
@@ -219,36 +364,39 @@
     }
 
 
+    /*
+     * --------------------------------------------------
+     * Build field context
+     * --------------------------------------------------
+     */
+
     function getFieldContext(field) {
 
         if (!field) {
             return "";
         }
 
-
         return [
-
             field.name,
-
             field.id,
-
             field.placeholder,
-
             field.ariaLabel,
-
             field.label,
-
             field.context,
-
             field.autocomplete
-
         ]
             .filter(Boolean)
             .join(" ");
     }
 
 
-    function exactOrContained(
+    /*
+     * --------------------------------------------------
+     * Keyword matching
+     * --------------------------------------------------
+     */
+
+    function keywordMatches(
         source,
         keyword
     ) {
@@ -259,7 +407,6 @@
         const normalizedKeyword =
             normalizeText(keyword);
 
-
         if (
             !normalizedSource ||
             !normalizedKeyword
@@ -268,15 +415,84 @@
         }
 
 
+        /*
+         * Word-boundary style matching.
+         *
+         * Prevents "pin" from accidentally matching
+         * unrelated words containing "pin".
+         */
+
+        const escaped =
+            normalizedKeyword
+                .replace(
+                    /[.*+?^${}()|[\]\\]/g,
+                    "\\$&"
+                );
+
+
+        const pattern =
+            new RegExp(
+                `(^|\\s)${escaped}(\\s|$)`,
+                "i"
+            );
+
+
         return (
             normalizedSource ===
             normalizedKeyword
-        ) ||
-        normalizedSource.includes(
-            normalizedKeyword
+        ) || pattern.test(
+            normalizedSource
         );
     }
 
+
+    /*
+     * --------------------------------------------------
+     * HTML autocomplete mapping
+     * --------------------------------------------------
+     */
+
+    const AUTOCOMPLETE_MAP = {
+
+        "name": "full_name",
+
+        "given-name":
+            "first_name",
+
+        "family-name":
+            "last_name",
+
+        "email":
+            "email",
+
+        "tel":
+            "phone",
+
+        "bday":
+            "date_of_birth",
+
+        "street-address":
+            "address",
+
+        "address-level2":
+            "city",
+
+        "address-level1":
+            "state",
+
+        "country":
+            "country",
+
+        "postal-code":
+            "postal_code"
+    };
+
+
+    /*
+     * --------------------------------------------------
+     * Classify one field
+     * --------------------------------------------------
+     */
 
     function classifyField(field) {
 
@@ -284,17 +500,19 @@
 
             return {
 
-                type:
-                    "unknown",
+                type: "unknown",
 
-                label:
-                    FIELD_LABELS.unknown,
+                label: "Other information",
 
-                confidence:
-                    0,
+                vaultKey: null,
 
-                matchedKeywords:
-                    []
+                confidence: 0,
+
+                protected: false,
+
+                canUseVault: false,
+
+                matchedKeywords: []
             };
         }
 
@@ -311,151 +529,143 @@
             );
 
 
+        const autocomplete =
+            normalizeText(
+                field.autocomplete
+            );
+
+
         /*
-         * Strong HTML signals.
+         * --------------------------------------------------
+         * Strong protected HTML signals
+         * --------------------------------------------------
          */
 
         if (
-            htmlType ===
-            "email"
+            htmlType === "password"
         ) {
 
-            return {
+            return createClassification(
+                "password",
+                100,
+                [
+                    "HTML password input"
+                ]
+            );
+        }
 
-                type:
-                    "email",
 
-                label:
-                    FIELD_LABELS.email,
+        /*
+         * --------------------------------------------------
+         * Strong HTML type signals
+         * --------------------------------------------------
+         */
 
-                confidence:
-                    99,
+        if (
+            htmlType === "email"
+        ) {
 
-                matchedKeywords:
-                    [
-                        "HTML email input"
-                    ]
-            };
+            return createClassification(
+                "email",
+                99,
+                [
+                    "HTML email input"
+                ]
+            );
         }
 
 
         if (
-            htmlType ===
-            "tel"
+            htmlType === "tel"
         ) {
 
-            return {
-
-                type:
-                    "phone",
-
-                label:
-                    FIELD_LABELS.phone,
-
-                confidence:
-                    99,
-
-                matchedKeywords:
-                    [
-                        "HTML telephone input"
-                    ]
-            };
+            return createClassification(
+                "phone",
+                99,
+                [
+                    "HTML telephone input"
+                ]
+            );
         }
 
 
-        if (
-            htmlType ===
-            "password"
-        ) {
-
-            return {
-
-                type:
-                    "password",
-
-                label:
-                    FIELD_LABELS.password,
-
-                confidence:
-                    100,
-
-                matchedKeywords:
-                    [
-                        "HTML password input"
-                    ]
-            };
-        }
-
+        /*
+         * Date input.
+         */
 
         if (
-            htmlType ===
-            "date"
+            htmlType === "date"
         ) {
-
-            /*
-             * A date input could specifically be
-             * a date of birth, so inspect its
-             * surrounding field context first.
-             */
-
-            const dobKeywords =
-                FIELD_PATTERNS.date_of_birth;
-
 
             const dobMatch =
-                dobKeywords.find(
-                    keyword =>
-                        exactOrContained(
-                            context,
-                            keyword
-                        )
-                );
+                FIELD_DEFINITIONS
+                    .date_of_birth
+                    .patterns
+                    .find(
+                        keyword =>
+                            keywordMatches(
+                                context,
+                                keyword
+                            )
+                    );
 
 
             if (dobMatch) {
 
-                return {
-
-                    type:
-                        "date_of_birth",
-
-                    label:
-                        FIELD_LABELS.date_of_birth,
-
-                    confidence:
-                        99,
-
-                    matchedKeywords:
-                        [
-                            dobMatch,
-                            "HTML date input"
-                        ]
-                };
+                return createClassification(
+                    "date_of_birth",
+                    99,
+                    [
+                        dobMatch,
+                        "HTML date input"
+                    ]
+                );
             }
 
 
-            return {
-
-                type:
-                    "date",
-
-                label:
-                    FIELD_LABELS.date,
-
-                confidence:
-                    96,
-
-                matchedKeywords:
-                    [
-                        "HTML date input"
-                    ]
-            };
+            return createClassification(
+                "date",
+                90,
+                [
+                    "HTML date input"
+                ]
+            );
         }
 
 
         /*
-         * Select / checkbox / radio still use
-         * textual classification.
+         * --------------------------------------------------
+         * Autocomplete signal
+         * --------------------------------------------------
+         */
+
+        if (
+            autocomplete &&
+            AUTOCOMPLETE_MAP[
+                autocomplete
+            ]
+        ) {
+
+            const type =
+                AUTOCOMPLETE_MAP[
+                    autocomplete
+                ];
+
+
+            return createClassification(
+                type,
+                98,
+                [
+                    `autocomplete="${autocomplete}"`
+                ]
+            );
+        }
+
+
+        /*
+         * --------------------------------------------------
+         * Pattern matching
+         * --------------------------------------------------
          */
 
         let bestType =
@@ -469,14 +679,14 @@
 
 
         Object.entries(
-            FIELD_PATTERNS
+            FIELD_DEFINITIONS
         ).forEach(
-            ([type, keywords]) => {
+            ([type, definition]) => {
 
                 const matches =
-                    keywords.filter(
+                    definition.patterns.filter(
                         keyword =>
-                            exactOrContained(
+                            keywordMatches(
                                 context,
                                 keyword
                             )
@@ -490,12 +700,12 @@
 
                 let score =
                     45 +
-                    matches.length * 12;
+                    matches.length * 10;
 
 
                 /*
-                 * Give the actual label/name/id
-                 * additional weight.
+                 * Strong fields:
+                 * label, name and id.
                  */
 
                 const strongFields = [
@@ -512,9 +722,7 @@
 
                 ]
                     .filter(Boolean)
-                    .map(
-                        normalizeText
-                    );
+                    .map(normalizeText);
 
 
                 matches.forEach(
@@ -542,13 +750,26 @@
 
 
                 /*
-                 * Avoid generic "name" defeating
-                 * "first name" or "last name".
+                 * Protected fields get
+                 * absolute priority.
                  */
 
                 if (
-                    type ===
-                    "full_name" &&
+                    definition.protected
+                ) {
+
+                    score += 100;
+                }
+
+
+                /*
+                 * Prevent generic "name"
+                 * logic from defeating
+                 * first/last name.
+                 */
+
+                if (
+                    type === "full_name" &&
                     (
                         context.includes(
                             "first name"
@@ -562,13 +783,13 @@
                     )
                 ) {
 
-                    score -= 35;
+                    score -= 50;
                 }
 
 
                 score =
                     Math.min(
-                        99,
+                        100,
                         score
                     );
 
@@ -592,36 +813,104 @@
         );
 
 
+        return createClassification(
+            bestType,
+            bestScore,
+            bestMatches
+        );
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * Create classification result
+     * --------------------------------------------------
+     */
+
+    function createClassification(
+        type,
+        confidence,
+        matchedKeywords
+    ) {
+
+        const definition =
+            FIELD_DEFINITIONS[type];
+
+
+        if (!definition) {
+
+            return {
+
+                type:
+                    type || "unknown",
+
+                label:
+                    "Other information",
+
+                vaultKey:
+                    null,
+
+                confidence:
+                    confidence || 0,
+
+                protected:
+                    false,
+
+                canUseVault:
+                    false,
+
+                matchedKeywords:
+                    matchedKeywords || []
+            };
+        }
+
+
+        const isProtected =
+            definition.protected === true;
+
+
         return {
 
-            type:
-                bestType,
+            type,
 
             label:
-                FIELD_LABELS[
-                    bestType
-                ] ||
-                FIELD_LABELS.unknown,
+                definition.label,
+
+            vaultKey:
+                definition.vaultKey ||
+                null,
 
             confidence:
-                bestScore,
+                confidence || 0,
+
+            protected:
+                isProtected,
+
+            canUseVault:
+                Boolean(
+                    definition.vaultKey
+                ) &&
+                !isProtected,
 
             matchedKeywords:
-                bestMatches
+                matchedKeywords || []
         };
     }
 
+
+    /*
+     * --------------------------------------------------
+     * Classify multiple fields
+     * --------------------------------------------------
+     */
 
     function classifyFields(
         fields
     ) {
 
         if (
-            !Array.isArray(
-                fields
-            )
+            !Array.isArray(fields)
         ) {
-
             return [];
         }
 
@@ -645,8 +934,17 @@
                     fieldLabel:
                         classification.label,
 
+                    vaultKey:
+                        classification.vaultKey,
+
                     confidence:
                         classification.confidence,
+
+                    protected:
+                        classification.protected,
+
+                    canUseVault:
+                        classification.canUseVault,
 
                     matchedKeywords:
                         classification.matchedKeywords
@@ -657,15 +955,9 @@
 
 
     /*
-     * Remove duplicate classifications.
-     *
-     * Example:
-     *
-     * name="name"
-     * id="full-name"
-     * label="Full Name"
-     *
-     * should still represent one field.
+     * --------------------------------------------------
+     * Remove duplicate fields
+     * --------------------------------------------------
      */
 
     function getUniqueClassifiedFields(
@@ -705,22 +997,16 @@
 
 
                 if (
-                    seen.has(
-                        identity
-                    )
+                    !identity ||
+                    seen.has(identity)
                 ) {
                     return;
                 }
 
 
-                seen.add(
-                    identity
-                );
+                seen.add(identity);
 
-
-                result.push(
-                    field
-                );
+                result.push(field);
             }
         );
 
@@ -729,28 +1015,51 @@
     }
 
 
-    globalThis.FIELD_PATTERNS =
-        FIELD_PATTERNS;
+    /*
+     * --------------------------------------------------
+     * Public API
+     * --------------------------------------------------
+     */
 
+    globalThis.FIELD_DEFINITIONS =
+        FIELD_DEFINITIONS;
+
+    globalThis.FIELD_PATTERNS =
+        Object.fromEntries(
+            Object.entries(
+                FIELD_DEFINITIONS
+            ).map(
+                ([key, value]) => [
+                    key,
+                    value.patterns
+                ]
+            )
+        );
 
     globalThis.FIELD_LABELS =
-        FIELD_LABELS;
-
+        Object.fromEntries(
+            Object.entries(
+                FIELD_DEFINITIONS
+            ).map(
+                ([key, value]) => [
+                    key,
+                    value.label
+                ]
+            )
+        );
 
     globalThis.classifyField =
         classifyField;
 
-
     globalThis.classifyFields =
         classifyFields;
-
 
     globalThis.getUniqueClassifiedFields =
         getUniqueClassifiedFields;
 
 
     console.log(
-        "[PageDelta] Enhanced field classifier loaded."
+        "[PageDelta] Secure field classifier loaded."
     );
 
 })();
