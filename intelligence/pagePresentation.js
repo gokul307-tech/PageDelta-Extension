@@ -901,6 +901,12 @@
 
                     title:
                         field.fieldLabel ||
+                        field.label ||
+                        (
+                            typeof FIELD_LABELS !==
+                            "undefined" &&
+                            FIELD_LABELS[field.fieldType]
+                        ) ||
                         "Information",
 
                     text:
