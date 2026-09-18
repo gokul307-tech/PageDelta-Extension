@@ -512,78 +512,97 @@
      */
 
     function extractFormFields() {
-        const elements =
-            findInputs();
 
-        return elements
-            .filter(element =>
-                elementIsVisible(element)
+    const elements =
+        findInputs();
+
+
+    const rawFields =
+        elements
+            .filter(
+                element =>
+                    elementIsVisible(
+                        element
+                    )
             )
-            .map(element => {
+            .map(
+                element => {
 
-                let type =
-                    getAttribute(
-                        element,
-                        "type"
-                    );
+                    let type =
+                        getAttribute(
+                            element,
+                            "type"
+                        );
 
-                if (!type) {
-                    type =
-                        element.tagName
-                            .toLowerCase();
+
+                    if (!type) {
+
+                        type =
+                            element.tagName
+                                .toLowerCase();
+                    }
+
+
+                    return {
+
+                        tag:
+                            element.tagName
+                                .toLowerCase(),
+
+                        type:
+                            type.toLowerCase(),
+
+                        name:
+                            getAttribute(
+                                element,
+                                "name"
+                            ),
+
+                        id:
+                            element.id ||
+                            "",
+
+                        placeholder:
+                            getAttribute(
+                                element,
+                                "placeholder"
+                            ),
+
+                        ariaLabel:
+                            getAttribute(
+                                element,
+                                "aria-label"
+                            ),
+
+                        autocomplete:
+                            getAttribute(
+                                element,
+                                "autocomplete"
+                            ),
+
+                        label:
+                            getAssociatedLabel(
+                                element
+                            ),
+
+                        context:
+                            getElementContext(
+                                element
+                            ),
+
+                        required:
+                            element.required === true,
+
+                        disabled:
+                            element.disabled === true,
+
+                        selector:
+                            getElementSelector(
+                                element
+                            )
+                    };
                 }
-
-                return {
-                    tag:
-                        element.tagName
-                            .toLowerCase(),
-
-                    type:
-                        type.toLowerCase(),
-
-                    name:
-                        getAttribute(
-                            element,
-                            "name"
-                        ),
-
-                    id:
-                        element.id || "",
-
-                    placeholder:
-                        getAttribute(
-                            element,
-                            "placeholder"
-                        ),
-
-                    ariaLabel:
-                        getAttribute(
-                            element,
-                            "aria-label"
-                        ),
-
-                    label:
-                        getAssociatedLabel(
-                            element
-                        ),
-
-                    context:
-                        getElementContext(
-                            element
-                        ),
-
-                    required:
-                        element.required === true,
-
-                    disabled:
-                        element.disabled === true,
-
-                    selector:
-                        getElementSelector(
-                            element
-                        )
-                };
-            })
+            )
             .slice(
                 0,
                 (
@@ -593,7 +612,41 @@
                     ? CONFIG.LIMITS.MAX_FIELDS
                     : 200
             );
+
+
+    /*
+     * Classify fields using the existing
+     * PageDelta intelligence layer.
+     */
+
+    if (
+        typeof getUniqueClassifiedFields ===
+        "function"
+    ) {
+
+        return getUniqueClassifiedFields(
+            rawFields
+        );
     }
+
+
+    if (
+        typeof classifyFields ===
+        "function"
+    ) {
+
+        return classifyFields(
+            rawFields
+        );
+    }
+
+
+    /*
+     * Safe fallback.
+     */
+
+    return rawFields;
+}
 
 
     /*
