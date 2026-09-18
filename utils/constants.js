@@ -147,6 +147,9 @@
         },
 
 
+        STORAGE: {},
+
+
         EVENTS: {
 
             PAGE_ANALYZED: "PAGE_ANALYZED",
