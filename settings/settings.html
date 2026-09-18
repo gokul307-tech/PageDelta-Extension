@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PageDelta - Settings</title>
+
+    <link
+        rel="stylesheet"
+        href="settings.css"
+    >
+</head>
+
+<body>
+
+    <main class="settings-container">
+
+        <!-- Page Header -->
+        <header class="settings-header">
+
+            <h1>PageDelta Settings</h1>
+
+            <p>
+                Manage your PageDelta preferences and personal information.
+            </p>
+
+        </header>
+
+
+        <!-- =========================================
+             PERSONAL INFORMATION VAULT
+             ========================================= -->
+
+        <section
+            class="settings-section"
+            id="information-vault-section"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>My Information</h2>
+
+                    <p>
+                        Store your personal information locally for
+                        permission-based autofill in PageDelta.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Privacy Notice -->
+
+            <div class="privacy-notice">
+
+                <strong>
+                    🔒 Your information stays under your control
+                </strong>
+
+                <p>
+                    PageDelta stores this information locally in your browser.
+                    It will not automatically share these details with websites.
+                </p>
+
+            </div>
+
+
+            <!-- Information Form -->
+
+            <form id="information-vault-form">
+
+
+                <!-- =========================================
+                     BASIC INFORMATION
+                     ========================================= -->
+
+                <div class="vault-group">
+
+                    <h3>Basic Information</h3>
+
+                    <div class="form-grid">
+
+
+                        <!-- Full Name -->
+
+                        <div class="form-field">
+
+                            <label for="vault-fullName">
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-fullName"
+                                name="fullName"
+                                autocomplete="name"
+                            >
+
+                        </div>
+
+
+                        <!-- First Name -->
+
+                        <div class="form-field">
+
+                            <label for="vault-firstName">
+                                First Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-firstName"
+                                name="firstName"
+                                autocomplete="given-name"
+                            >
+
+                        </div>
+
+
+                        <!-- Last Name -->
+
+                        <div class="form-field">
+
+                            <label for="vault-lastName">
+                                Last Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-lastName"
+                                name="lastName"
+                                autocomplete="family-name"
+                            >
+
+                        </div>
+
+
+                        <!-- Email -->
+
+                        <div class="form-field">
+
+                            <label for="vault-email">
+                                Email
+                            </label>
+
+                            <input
+                                type="email"
+                                id="vault-email"
+                                name="email"
+                                autocomplete="email"
+                            >
+
+                        </div>
+
+
+                        <!-- Phone -->
+
+                        <div class="form-field">
+
+                            <label for="vault-phone">
+                                Phone
+                            </label>
+
+                            <input
+                                type="tel"
+                                id="vault-phone"
+                                name="phone"
+                                autocomplete="tel"
+                            >
+
+                        </div>
+
+
+                        <!-- Date of Birth -->
+
+                        <div class="form-field">
+
+                            <label for="vault-dateOfBirth">
+                                Date of Birth
+                            </label>
+
+                            <input
+                                type="date"
+                                id="vault-dateOfBirth"
+                                name="dateOfBirth"
+                            >
+
+                        </div>
+
+
+                        <!-- Gender -->
+
+                        <div class="form-field">
+
+                            <label for="vault-gender">
+                                Gender
+                            </label>
+
+                            <select
+                                id="vault-gender"
+                                name="gender"
+                            >
+
+                                <option value="">
+                                    Prefer not to specify
+                                </option>
+
+                                <option value="Male">
+                                    Male
+                                </option>
+
+                                <option value="Female">
+                                    Female
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     ADDRESS
+                     ========================================= -->
+
+                <div class="vault-group">
+
+                    <h3>Address</h3>
+
+                    <div class="form-grid">
+
+
+                        <!-- Address -->
+
+                        <div class="form-field form-field-wide">
+
+                            <label for="vault-address">
+                                Address
+                            </label>
+
+                            <textarea
+                                id="vault-address"
+                                name="address"
+                                rows="3"
+                            ></textarea>
+
+                        </div>
+
+
+                        <!-- City -->
+
+                        <div class="form-field">
+
+                            <label for="vault-city">
+                                City
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-city"
+                                name="city"
+                                autocomplete="address-level2"
+                            >
+
+                        </div>
+
+
+                        <!-- State -->
+
+                        <div class="form-field">
+
+                            <label for="vault-state">
+                                State
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-state"
+                                name="state"
+                                autocomplete="address-level1"
+                            >
+
+                        </div>
+
+
+                        <!-- Country -->
+
+                        <div class="form-field">
+
+                            <label for="vault-country">
+                                Country
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-country"
+                                name="country"
+                                autocomplete="country-name"
+                            >
+
+                        </div>
+
+
+                        <!-- Postal Code -->
+
+                        <div class="form-field">
+
+                            <label for="vault-postalCode">
+                                PIN / Postal Code
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-postalCode"
+                                name="postalCode"
+                                autocomplete="postal-code"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     EDUCATION
+                     ========================================= -->
+
+                <div class="vault-group">
+
+                    <h3>Education</h3>
+
+                    <div class="form-grid">
+
+
+                        <!-- College -->
+
+                        <div class="form-field form-field-wide">
+
+                            <label for="vault-college">
+                                College / Institution
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-college"
+                                name="college"
+                            >
+
+                        </div>
+
+
+                        <!-- Course -->
+
+                        <div class="form-field">
+
+                            <label for="vault-course">
+                                Course
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-course"
+                                name="course"
+                            >
+
+                        </div>
+
+
+                        <!-- Department -->
+
+                        <div class="form-field">
+
+                            <label for="vault-department">
+                                Department
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-department"
+                                name="department"
+                            >
+
+                        </div>
+
+
+                        <!-- Registration Number -->
+
+                        <div class="form-field">
+
+                            <label for="vault-registrationNumber">
+                                Registration / Roll Number
+                            </label>
+
+                            <input
+                                type="text"
+                                id="vault-registrationNumber"
+                                name="registrationNumber"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     ADDITIONAL INFORMATION
+                     ========================================= -->
+
+                <div class="vault-group">
+
+                    <h3>Additional Information</h3>
+
+
+                    <!-- Skills -->
+
+                    <div class="form-field">
+
+                        <label for="vault-skills">
+                            Skills
+                        </label>
+
+                        <textarea
+                            id="vault-skills"
+                            name="skills"
+                            rows="3"
+                            placeholder="Example: Java, Python, SQL, HTML, CSS"
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- Custom Information -->
+
+                    <div class="form-field">
+
+                        <label for="vault-customInformation">
+                            Custom Information
+                        </label>
+
+                        <textarea
+                            id="vault-customInformation"
+                            name="customInformation"
+                            rows="4"
+                            placeholder="Add other non-sensitive information you want PageDelta to remember."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     ACTION BUTTONS
+                     ========================================= -->
+
+                <div class="vault-actions">
+
+
+                    <!-- Save -->
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="save-vault-button"
+                    >
+                        Save Information
+                    </button>
+
+
+                    <!-- Clear -->
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="clear-vault-button"
+                    >
+                        Clear Information
+                    </button>
+
+
+                    <!-- Status -->
+
+                    <span
+                        id="vault-save-status"
+                        class="save-status"
+                        aria-live="polite"
+                    ></span>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         JAVASCRIPT
+         ========================================= -->
+
+    <!-- Existing PageDelta constants -->
+    <script src="../utils/constants.js"></script>
+
+    <!-- Personal Information Vault -->
+    <script src="../storage/informationVault.js"></script>
+
+    <!-- Settings page logic -->
+    <script src="settings.js"></script>
+
+</body>
+</html>
