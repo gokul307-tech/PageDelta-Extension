@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+:root { color-scheme: light; --ink: #17324d; --muted: #637487; --line: #dbe5ee; --surface: #fff; --wash: #f3f7fb; --accent: #1769aa; --accent-dark: #0f4f81; }
+body { min-width: 320px; margin: 0; background: var(--wash); color: var(--ink); font: 14px/1.45 "Segoe UI", sans-serif; }
+.popup-shell { padding: 20px; }
+.popup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: white; font-weight: 700; font-size: 20px; }
+.eyebrow { margin: 0; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+h1, h2, p { margin: 0; }
+h1 { font-size: 20px; }
+h2 { font-size: 18px; overflow-wrap: anywhere; }
+.status { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); }
+.status.error { color: #9b2c2c; border-color: #efcaca; }
+.overview { padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.muted { margin-top: 4px; color: var(--muted); overflow-wrap: anywhere; }
+.metrics { display: grid; gap: 10px; margin: 16px 0 0; }
+.metrics div { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; text-align: right; }
+.popup-actions { display: grid; gap: 8px; margin-top: 16px; }
+.button { min-height: 38px; border: 1px solid var(--accent); border-radius: 7px; padding: 8px 12px; font: inherit; font-weight: 600; cursor: pointer; }
+.primary { background: var(--accent); color: white; }
+.primary:hover { background: var(--accent-dark); }
+.secondary { background: var(--surface); color: var(--accent-dark); }

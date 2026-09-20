@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PageDelta</title>
+	<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+	<main class="popup-shell">
+		<header class="popup-header">
+			<div class="brand-mark" aria-hidden="true">P</div>
+			<div>
+				<p class="eyebrow">PageDelta</p>
+				<h1>Current page</h1>
+			</div>
+		</header>
+		<section id="popup-status" class="status" aria-live="polite">Loading page information...</section>
+		<section id="page-overview" class="overview" hidden>
+			<h2 id="page-title">Current webpage</h2>
+			<p id="page-url" class="muted"></p>
+			<dl class="metrics">
+				<div><dt>Purpose</dt><dd id="page-purpose">Not detected</dd></div>
+				<div><dt>Information requested</dt><dd id="field-count">0 fields</dd></div>
+				<div><dt>Deadlines</dt><dd id="deadline-count">0</dd></div>
+			</dl>
+		</section>
+		<div class="popup-actions">
+			<button id="review-button" class="button primary" type="button">Review information</button>
+			<button id="dashboard-button" class="button secondary" type="button">Open dashboard</button>
+		</div>
+	</main>
+	<script src="popup.js"></script>
+</body>
+</html>
