@@ -226,6 +226,17 @@
             ]
         },
 
+        blood_group: {
+            vaultKey: "bloodGroup",
+            label: "Blood group",
+            patterns: [
+                "blood group",
+                "blood type",
+                "bloodtype",
+                "bloodgroup"
+            ]
+        },
+
 
         /*
          * --------------------------------------------------
