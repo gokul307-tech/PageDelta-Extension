@@ -26,6 +26,12 @@
     let currentUserPurpose =
         "";
 
+    let currentShareDecision =
+        null;
+
+    let shareDecisionUrl =
+        "";
+
 
     function initializeFloatingPanel() {
 
@@ -345,6 +351,18 @@
         content.innerHTML =
             "";
 
+        if (
+            analysis.url !==
+            shareDecisionUrl
+        ) {
+            shareDecisionUrl =
+                analysis.url ||
+                window.location.href;
+
+            currentShareDecision =
+                null;
+        }
+
 
         let presentation;
 
@@ -404,6 +422,12 @@
 
 
         renderFields(
+            presentation
+        );
+
+
+        renderSharePermission(
+            analysis,
             presentation
         );
 
@@ -1021,6 +1045,63 @@
      * --------------------------------------------------
      */
 
+    function deriveFieldLabel(
+        field
+    ) {
+
+        if (!field) {
+            return "Information";
+        }
+
+        if (
+            field.title &&
+            field.title !==
+            "Information"
+        ) {
+            return field.title;
+        }
+
+        if (
+            field.fieldLabel
+        ) {
+            return field.fieldLabel;
+        }
+
+        if (
+            field.label
+        ) {
+            return field.label;
+        }
+
+        if (
+            field.fieldType &&
+            typeof FIELD_LABELS !==
+            "undefined" &&
+            FIELD_LABELS[field.fieldType]
+        ) {
+            return FIELD_LABELS[field.fieldType];
+        }
+
+        if (
+            field.vaultKey &&
+            typeof FIELD_LABELS !==
+            "undefined" &&
+            FIELD_LABELS[field.vaultKey]
+        ) {
+            return FIELD_LABELS[field.vaultKey];
+        }
+
+        const fallback = [
+            field.ariaLabel,
+            field.placeholder,
+            field.name,
+            field.id
+        ].find(Boolean);
+
+        return fallback || "Information";
+    }
+
+
     function renderFields(
         presentation
     ) {
@@ -1029,13 +1110,31 @@
             Array.isArray(
                 presentation.fields
             )
-                ? presentation.fields
+                ? presentation.fields.filter(
+                    field =>
+                        field &&
+                        field.type ===
+                        "field"
+                )
                 : [];
 
 
         if (!fields.length) {
             return;
         }
+
+
+        const requiredFields =
+            fields.filter(
+                field =>
+                    field.required === true
+            );
+
+        const optionalFields =
+            fields.filter(
+                field =>
+                    field.required !== true
+            );
 
 
         const section =
@@ -1055,7 +1154,7 @@
 
 
         intro.textContent =
-            "This page is asking for the following information:";
+            "This form is asking for:";
 
 
         section.appendChild(
@@ -1063,125 +1162,928 @@
         );
 
 
-        const list =
-            document.createElement(
-                "div"
-            );
+        const allRows = [
+            {
+                label: "Required",
+                items: requiredFields
+            },
+            {
+                label: "Optional",
+                items: optionalFields
+            }
+        ];
 
 
-        list.className =
-            "pagedelta-field-list";
+        allRows.forEach(
+            group => {
 
-
-        fields
-            .slice(
-                0,
-                12
-            )
-            .forEach(
-                field => {
-
-                    const item =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    item.className =
-                        "pagedelta-field-item";
-
-
-                    const check =
-                        document.createElement(
-                            "span"
-                        );
-
-
-                    check.className =
-                        "pagedelta-field-check";
-
-
-                    check.textContent =
-                        field.required
-                            ? "!"
-                            : "✓";
-
-
-                    const body =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    body.className =
-                        "pagedelta-field-body";
-
-
-                    const name =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    name.className =
-                        "pagedelta-field-name";
-
-
-                    name.textContent =
-                        field.title ||
-                        "Other information";
-
-
-                    const status =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    status.className =
-                        "pagedelta-field-status";
-
-
-                    status.textContent =
-                        field.required
-                            ? "Required"
-                            : "Optional";
-
-
-                    body.appendChild(
-                        name
-                    );
-
-
-                    body.appendChild(
-                        status
-                    );
-
-
-                    item.appendChild(
-                        check
-                    );
-
-
-                    item.appendChild(
-                        body
-                    );
-
-
-                    list.appendChild(
-                        item
-                    );
+                if (
+                    !group.items.length
+                ) {
+                    return;
                 }
-            );
 
+                const heading =
+                    document.createElement(
+                        "div"
+                    );
 
-        section.appendChild(
-            list
+                heading.className =
+                    "pagedelta-field-group-title";
+
+                heading.textContent =
+                    group.label;
+
+                section.appendChild(
+                    heading
+                );
+
+                const list =
+                    document.createElement(
+                        "div"
+                    );
+
+                list.className =
+                    "pagedelta-field-list";
+
+                group.items.forEach(
+                    field => {
+
+                        const item =
+                            document.createElement(
+                                "div"
+                            );
+
+                        item.className =
+                            "pagedelta-field-item";
+
+                        const match =
+                            findFieldMatch(
+                                field,
+                                presentation
+                            );
+
+                        const label =
+                            deriveFieldLabel(
+                                field
+                            );
+
+                        const statusText =
+                            match &&
+                            match.protected
+                                ? "Protected"
+                                : match &&
+                                  match.hasValue
+                                    ? "Available"
+                                    : "Missing";
+
+                        const check =
+                            document.createElement(
+                                "span"
+                            );
+
+                        check.className =
+                            "pagedelta-field-check";
+
+                        check.textContent =
+                            match &&
+                            match.protected
+                                ? "🔒"
+                                : match &&
+                                  match.hasValue
+                                    ? "✓"
+                                    : "⚠";
+
+                        const body =
+                            document.createElement(
+                                "div"
+                            );
+
+                        body.className =
+                            "pagedelta-field-body";
+
+                        const name =
+                            document.createElement(
+                                "div"
+                            );
+
+                        name.className =
+                            "pagedelta-field-name";
+
+                        name.textContent =
+                            label;
+
+                        const status =
+                            document.createElement(
+                                "div"
+                            );
+
+                        status.className =
+                            "pagedelta-field-status";
+
+                        status.textContent =
+                            statusText;
+
+                        body.appendChild(
+                            name
+                        );
+
+                        body.appendChild(
+                            status
+                        );
+
+                        item.appendChild(
+                            check
+                        );
+
+                        item.appendChild(
+                            body
+                        );
+
+                        list.appendChild(
+                            item
+                        );
+                    }
+                );
+
+                section.appendChild(
+                    list
+                );
+            }
         );
 
 
         content.appendChild(
             section
+        );
+    }
+
+
+    function renderSharePermission(
+        analysis,
+        presentation
+    ) {
+
+        const matches =
+            Array.isArray(
+                analysis.fieldMatches
+            )
+                ? analysis.fieldMatches.filter(
+                    match =>
+                        Boolean(
+                            match
+                        )
+                )
+                : [];
+
+        if (
+            !matches.length
+        ) {
+            return;
+        }
+
+        if (
+            currentShareDecision ===
+            null
+        ) {
+            const section =
+                createSection(
+                    "Share information?"
+                );
+
+            const note =
+                document.createElement(
+                    "p"
+                );
+
+            note.textContent =
+                "PageDelta found form fields and will only use saved information if you allow it.";
+
+            const actions =
+                document.createElement(
+                    "div"
+                );
+
+            actions.className =
+                "pagedelta-action-row";
+
+            const no =
+                createButton(
+                    "No",
+                    "secondary"
+                );
+
+            no.addEventListener(
+                "click",
+                () => {
+                    currentShareDecision =
+                        false;
+
+                    updateFloatingPanel(
+                        analysis
+                    );
+                }
+            );
+
+            const yes =
+                createButton(
+                    "Yes",
+                    "primary"
+                );
+
+            yes.addEventListener(
+                "click",
+                () => {
+                    currentShareDecision =
+                        true;
+
+                    updateFloatingPanel(
+                        analysis
+                    );
+                }
+            );
+
+            actions.append(
+                no,
+                yes
+            );
+
+            section.append(
+                note,
+                actions
+            );
+
+            content.appendChild(
+                section
+            );
+
+            return;
+        }
+
+        if (
+            currentShareDecision ===
+            false
+        ) {
+            return;
+        }
+
+        showPermissionPreview(
+            analysis,
+            matches.filter(
+                match =>
+                    match.hasValue &&
+                    !match.protected
+            )
+        );
+
+        const missing =
+            matches.filter(
+                match =>
+                    !match.hasValue &&
+                    !match.protected
+            );
+
+        missing.forEach(
+            match => {
+                const field =
+                    Array.isArray(
+                        analysis.fields
+                    )
+                        ? analysis.fields.find(
+                            candidate =>
+                                candidate.vaultKey ===
+                                match.vaultKey ||
+                                candidate.id ===
+                                match.id ||
+                                candidate.name ===
+                                match.id
+                        )
+                        : null;
+
+                if (
+                    !field
+                ) {
+                    return;
+                }
+
+                const button =
+                    createButton(
+                        `Enter ${match.label || "missing information"}`,
+                        "secondary"
+                    );
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        showMissingFieldPrompt(
+                            field,
+                            match
+                        );
+                    }
+                );
+
+                content.appendChild(
+                    button
+                );
+            }
+        );
+    }
+
+
+    function findFieldMatch(
+        field,
+        analysis
+    ) {
+
+        if (
+            !field ||
+            !analysis ||
+            !Array.isArray(
+                analysis.fieldMatches
+            )
+        ) {
+            return null;
+        }
+
+        const selectors = [
+            field.selector,
+            field.id,
+            field.name,
+            field.label,
+            field.placeholder,
+            field.fieldType,
+            field.fieldLabel
+        ].filter(Boolean);
+
+        return analysis.fieldMatches.find(
+            match => {
+
+                if (
+                    !match
+                ) {
+                    return false;
+                }
+
+                if (
+                    match.vaultKey &&
+                    field.vaultKey &&
+                    match.vaultKey ===
+                    field.vaultKey
+                ) {
+                    return true;
+                }
+
+                if (
+                    match.id &&
+                    selectors.includes(
+                        match.id
+                    )
+                ) {
+                    return true;
+                }
+
+                if (
+                    field.fieldType &&
+                    field.fieldType ===
+                    match.vaultKey
+                ) {
+                    return true;
+                }
+
+                return false;
+            }
+        ) || null;
+    }
+
+
+    function maskValue(value) {
+
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
+            return "Not available";
+        }
+
+        const raw =
+            String(value).trim();
+
+        if (!raw) {
+            return "Not available";
+        }
+
+        if (raw.length <= 2) {
+            return "*".repeat(raw.length);
+        }
+
+        return `${raw[0]}${"*".repeat(
+            Math.max(4, raw.length - 2)
+        )}${raw.slice(-1)}`;
+    }
+
+
+    function showProtectedFieldNotice(
+        field,
+        match
+    ) {
+
+        const title =
+            (field.title || field.fieldLabel || field.label || "This field") +
+            " is protected";
+
+        const info =
+            document.createElement(
+                "div"
+            );
+
+        info.className =
+            "pagedelta-field-info";
+
+        info.innerHTML = `
+            <div class="pagedelta-field-name">${title}</div>
+            <div class="pagedelta-field-status">Protected</div>
+            <div class="pagedelta-field-note">PageDelta will not automatically fill or save protected values.</div>
+        `;
+
+        content.appendChild(
+            info
+        );
+    }
+
+
+    async function saveMissingFieldValue(
+        field,
+        value
+    ) {
+
+        if (
+            !field ||
+            !value ||
+            !value.trim()
+        ) {
+            return false;
+        }
+
+        const vaultApi =
+            PAGEDELTA &&
+            PAGEDELTA.STORAGE &&
+            PAGEDELTA.STORAGE.informationVault;
+
+        const key =
+            field.vaultKey ||
+            field.fieldType ||
+            field.type ||
+            null;
+
+        if (
+            !vaultApi ||
+            !key ||
+            typeof vaultApi.updateVault !==
+            "function"
+        ) {
+            return false;
+        }
+
+        const result =
+            await vaultApi.updateVault({
+                [key]: value.trim()
+            });
+
+        return !!(
+            result &&
+            result.success
+        );
+    }
+
+
+    function fillFieldValue(
+        field,
+        value
+    ) {
+
+        if (!field || value === undefined || value === null) {
+            return false;
+        }
+
+        const selectors = [
+            field.selector,
+            field.id ? `#${CSS.escape(field.id)}` : "",
+            field.name ? `[name="${field.name}"]` : "",
+            field.name ? `[name='${field.name}']` : ""
+        ].filter(Boolean);
+
+        let target = null;
+
+        for (const selector of selectors) {
+            try {
+                const found =
+                    document.querySelector(
+                        selector
+                    );
+
+                if (found) {
+                    target = found;
+                    break;
+                }
+            } catch (error) {
+                // Ignore invalid selectors.
+            }
+        }
+
+        if (!target) {
+            return false;
+        }
+
+        target.value = String(value);
+
+        try {
+            target.dispatchEvent(
+                new Event(
+                    "input",
+                    {
+                        bubbles: true
+                    }
+                )
+            );
+        } catch (error) {
+            // Ignore event errors.
+        }
+
+        try {
+            target.dispatchEvent(
+                new Event(
+                    "change",
+                    {
+                        bubbles: true
+                    }
+                )
+            );
+        } catch (error) {
+            // Ignore event errors.
+        }
+
+        return true;
+    }
+
+
+    function fillAvailableMatches(
+        analysis
+    ) {
+
+        if (!analysis || !Array.isArray(analysis.fieldMatches)) {
+            return 0;
+        }
+
+        let filled = 0;
+
+        analysis.fieldMatches.forEach(
+            match => {
+
+                if (
+                    !match ||
+                    match.protected ||
+                    !match.hasValue
+                ) {
+                    return;
+                }
+
+                const matchField =
+                    analysis.fields &&
+                    Array.isArray(
+                        analysis.fields
+                    )
+                        ? analysis.fields.find(
+                            field => {
+                                const selectors = [
+                                    field.selector,
+                                    field.id,
+                                    field.name,
+                                    field.label,
+                                    field.placeholder
+                                ].filter(Boolean);
+
+                                return match.id &&
+                                    selectors.includes(
+                                        match.id
+                                    );
+                            }
+                        )
+                        : null;
+
+                if (
+                    matchField &&
+                    fillFieldValue(
+                        matchField,
+                        match.value
+                    )
+                ) {
+                    filled += 1;
+                }
+            }
+        );
+
+        return filled;
+    }
+
+
+    function showPermissionPreview(
+        analysis,
+        availableMatches
+    ) {
+
+        if (!analysis) {
+            return;
+        }
+
+        const preview =
+            createSection(
+                "Review information"
+            );
+
+        const list =
+            document.createElement(
+                "div"
+            );
+
+        list.className =
+            "pagedelta-field-list";
+
+        const rows =
+            Array.isArray(
+                availableMatches
+            ) && availableMatches.length
+                ? availableMatches
+                : Array.isArray(
+                    analysis.fieldMatches
+                )
+                    ? analysis.fieldMatches.filter(
+                        match =>
+                            match &&
+                            match.hasValue &&
+                            !match.protected
+                    )
+                    : [];
+
+        rows.forEach(
+            match => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+                row.className =
+                    "pagedelta-field-item";
+
+                const title =
+                    document.createElement(
+                        "div"
+                    );
+
+                title.className =
+                    "pagedelta-field-name";
+
+                title.textContent =
+                    `${match.label || "Information"} → ${maskValue(match.value)}`;
+
+                row.appendChild(
+                    title
+                );
+
+                list.appendChild(
+                    row
+                );
+            }
+        );
+
+        preview.appendChild(
+            list
+        );
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+        actions.className =
+            "pagedelta-action-row";
+
+        const cancel =
+            createButton(
+                "Cancel",
+                "secondary"
+            );
+
+        cancel.addEventListener(
+            "click",
+            () => {
+                updateFloatingPanel(
+                    analysis
+                );
+            }
+        );
+
+        const fill =
+            createButton(
+                "Allow & Fill",
+                "primary"
+            );
+
+        fill.addEventListener(
+            "click",
+            () => {
+                const filled =
+                    fillAvailableMatches(
+                        analysis
+                    );
+
+                const message =
+                    filled
+                        ? "PageDelta filled the available fields."
+                        : "No fields were filled.";
+
+                showPanelMessage(
+                    message,
+                    filled ? "success" : "info"
+                );
+            }
+        );
+
+        actions.appendChild(
+            cancel
+        );
+
+        actions.appendChild(
+            fill
+        );
+
+        preview.appendChild(
+            actions
+        );
+
+        content.appendChild(
+            preview
+        );
+    }
+
+
+    function showMissingFieldPrompt(
+        field,
+        match
+    ) {
+
+        const prompt =
+            createSection(
+                `Enter ${
+                    field.title ||
+                    field.fieldLabel ||
+                    field.label ||
+                    "Information"
+                }`
+            );
+
+        const note =
+            document.createElement(
+                "p"
+            );
+
+        note.textContent =
+            `${
+                field.title ||
+                field.fieldLabel ||
+                field.label ||
+                "This information"
+            } is required by this page.`;
+
+        const input =
+            document.createElement(
+                "input"
+            );
+
+        input.type =
+            "text";
+
+        input.placeholder =
+            field.title ||
+            field.fieldLabel ||
+            field.label ||
+            "Enter value";
+
+        input.className =
+            "pagedelta-inline-input";
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+        actions.className =
+            "pagedelta-action-row";
+
+        const saveButton =
+            createButton(
+                "Save for future use",
+                "primary"
+            );
+
+        saveButton.addEventListener(
+            "click",
+            async () => {
+                const value =
+                    input.value.trim();
+
+                if (!value) {
+                    return;
+                }
+
+                const saved =
+                    await saveMissingFieldValue(
+                        field,
+                        value
+                    );
+
+                if (saved) {
+                    fillFieldValue(
+                        field,
+                        value
+                    );
+                    showPanelMessage(
+                        "Saved and filled this information.",
+                        "success"
+                    );
+                }
+            }
+        );
+
+        const useOnceButton =
+            createButton(
+                "Use once",
+                "secondary"
+            );
+
+        useOnceButton.addEventListener(
+            "click",
+            () => {
+                const value =
+                    input.value.trim();
+
+                if (!value) {
+                    return;
+                }
+
+                fillFieldValue(
+                    field,
+                    value
+                );
+                showPanelMessage(
+                    "Used this value once for this page.",
+                    "info"
+                );
+            }
+        );
+
+        const cancelButton =
+            createButton(
+                "Cancel",
+                "secondary"
+            );
+
+        cancelButton.addEventListener(
+            "click",
+            () => {
+                updateFloatingPanel(
+                    PAGEDELTA_CONTENT.lastAnalysis
+                );
+            }
+        );
+
+        actions.appendChild(
+            saveButton
+        );
+
+        actions.appendChild(
+            useOnceButton
+        );
+
+        actions.appendChild(
+            cancelButton
+        );
+
+        prompt.appendChild(
+            note
+        );
+
+        prompt.appendChild(
+            input
+        );
+
+        prompt.appendChild(
+            actions
+        );
+
+        content.appendChild(
+            prompt
         );
     }
 
@@ -1376,6 +2278,18 @@
 
     globalThis.updateFloatingPanel =
         updateFloatingPanel;
+
+
+    globalThis.fillAvailableMatches =
+        fillAvailableMatches;
+
+
+    globalThis.showPermissionPreview =
+        showPermissionPreview;
+
+
+    globalThis.showMissingFieldPrompt =
+        showMissingFieldPrompt;
 
 
     globalThis.showPanelLoading =

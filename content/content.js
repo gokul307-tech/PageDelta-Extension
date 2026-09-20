@@ -112,6 +112,26 @@
             const analysis =
                 await analyzePage();
 
+            if (
+                analysis &&
+                Array.isArray(
+                    analysis.fields
+                ) &&
+                PAGEDELTA &&
+                PAGEDELTA.STORAGE &&
+                PAGEDELTA.STORAGE.informationVault &&
+                typeof PAGEDELTA.STORAGE.informationVault
+                    .buildFieldPermissionPreview ===
+                    "function"
+            ) {
+                analysis.fieldMatches =
+                    await PAGEDELTA.STORAGE
+                        .informationVault
+                        .buildFieldPermissionPreview(
+                            analysis.fields
+                        );
+            }
+
 
             PAGEDELTA_CONTENT.lastAnalysis =
                 analysis;
