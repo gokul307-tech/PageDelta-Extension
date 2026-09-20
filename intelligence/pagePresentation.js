@@ -885,21 +885,45 @@
         }
 
 
+        const matchesById =
+            Array.isArray(
+                analysis.fieldMatches
+            )
+                ? new Map(
+                    analysis.fieldMatches.map(
+                        match => [
+                            match.id,
+                            match
+                        ]
+                    )
+                )
+                : new Map();
+
+
         return fields
             .filter(
                 field =>
                     !field.disabled
             )
             .map(
-                field => ({
+                field => {
 
-                    type:
-                        "field",
+                    const matchId =
+                        field.id ||
+                        field.selector ||
+                        field.name ||
+                        field.label ||
+                        field.placeholder ||
+                        "";
 
-                    icon:
-                        "📝",
+                    const match =
+                        matchesById.get(
+                            matchId
+                        ) ||
+                        null;
 
-                    title:
+                    const title =
+                        (match && match.label) ||
                         field.fieldLabel ||
                         field.label ||
                         (
@@ -907,33 +931,54 @@
                             "undefined" &&
                             FIELD_LABELS[field.fieldType]
                         ) ||
-                        "Information",
+                        "Information";
 
-                    text:
-                        field.required
-                            ? "Required field"
-                            : "Information requested",
+                    const status =
+                        match && match.status
+                            ? match.status
+                            : 
+                                field.required
+                                    ? "missing"
+                                    : "available";
 
-                    fieldType:
-                        field.fieldType ||
-                        "unknown",
+                    return {
 
-                    confidence:
-                        field.confidence ||
-                        0,
+                        type:
+                            "field",
 
-                    required:
-                        field.required === true,
+                        icon:
+                            "📝",
 
-                    selector:
-                        field.selector,
+                        title,
 
-                    priority:
-                        field.required
-                            ? 90
-                            : 70
+                        text:
+                            field.required
+                                ? "Required field"
+                                : "Information requested",
 
-                })
+                        fieldType:
+                            field.fieldType ||
+                            "unknown",
+
+                        confidence:
+                            field.confidence ||
+                            0,
+
+                        required:
+                            field.required === true,
+
+                        status,
+
+                        selector:
+                            field.selector,
+
+                        priority:
+                            field.required
+                                ? 90
+                                : 70
+
+                    };
+                }
             );
     }
 
@@ -1037,6 +1082,85 @@
      * --------------------------------------------------
      */
 
+    function normalizeActionLabel(
+        value
+    ) {
+
+        const text =
+            clean(
+                value || ""
+            ).toLowerCase();
+
+        if (!text) {
+            return "";
+        }
+
+        if (
+            text.includes("submit") ||
+            text.includes("submission")
+        ) {
+            return "Submit form";
+        }
+
+        if (
+            text.includes("register") ||
+            text.includes("registration")
+        ) {
+            return "Register";
+        }
+
+        if (
+            text.includes("download")
+        ) {
+            return "Download";
+        }
+
+        if (
+            text.includes("upload")
+        ) {
+            return "Upload file";
+        }
+
+        if (
+            text.includes("book") ||
+            text.includes("booking")
+        ) {
+            return "Book / Make a booking";
+        }
+
+        if (
+            text.includes("apply") ||
+            text.includes("application")
+        ) {
+            return "Apply";
+        }
+
+        if (
+            text.includes("login") ||
+            text.includes("sign in")
+        ) {
+            return "Sign in";
+        }
+
+        if (
+            text.includes("contact") ||
+            text.includes("call")
+        ) {
+            return "Contact";
+        }
+
+        return text
+            .split(/\s+/)
+            .filter(Boolean)
+            .map(
+                word =>
+                    word.charAt(0).toUpperCase() +
+                    word.slice(1)
+            )
+            .join(" ");
+    }
+
+
     function getActions(
         analysis
     ) {
@@ -1049,6 +1173,7 @@
             return [];
         }
 
+        const seen = new Set();
 
         return analysis.actions
             .map(
@@ -1058,8 +1183,7 @@
                         return null;
                     }
 
-
-                    const text =
+                    const rawText =
                         clean(
                             action.label ||
                             action.text ||
@@ -1069,11 +1193,23 @@
                             ""
                         );
 
+                    const label =
+                        normalizeActionLabel(
+                            rawText
+                        );
 
-                    if (!text) {
+                    if (!label) {
                         return null;
                     }
 
+                    const key =
+                        label.toLowerCase();
+
+                    if (seen.has(key)) {
+                        return null;
+                    }
+
+                    seen.add(key);
 
                     return {
 
@@ -1084,9 +1220,10 @@
                             "⚡",
 
                         title:
-                            "Action",
+                            label,
 
-                        text,
+                        text:
+                            label,
 
                         priority:
                             50
@@ -1318,6 +1455,13 @@
                 getFields(
                     analysis
                 ),
+
+            fieldMatches:
+                Array.isArray(
+                    analysis.fieldMatches
+                )
+                    ? analysis.fieldMatches
+                    : [],
 
             counts: {
 
