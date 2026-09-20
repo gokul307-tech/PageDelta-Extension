@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PageDelta Dashboard</title>
+	<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+	<header class="topbar">
+		<div class="brand"><span class="brand-mark">P</span><span>PageDelta</span></div>
+		<nav aria-label="Primary navigation">
+			<a class="active" href="#home">Home</a>
+			<a href="../settings/settings.html">My Information</a>
+			<a href="#schedule">Schedule</a>
+			<a href="#tracked">Tracked Websites</a>
+			<a href="#history">Page History</a>
+			<a href="../settings/settings.html">Settings</a>
+		</nav>
+	</header>
+	<main class="dashboard-shell">
+		<section class="page-heading" id="home">
+			<p class="eyebrow">Your local web assistant</p>
+			<h1>Overview</h1>
+			<p class="muted">A quiet view of pages, deadlines, and actions PageDelta has intentionally saved.</p>
+		</section>
+		<section id="dashboard-status" class="status" aria-live="polite">Loading your dashboard...</section>
+		<section class="summary-grid" id="summary-grid" hidden>
+			<article class="summary-card"><span>Saved pages</span><strong id="page-total">0</strong></article>
+			<article class="summary-card"><span>Upcoming actions</span><strong id="action-total">0</strong></article>
+			<article class="summary-card"><span>Saved snapshots</span><strong id="snapshot-total">0</strong></article>
+		</section>
+		<div class="content-grid" id="dashboard-content" hidden>
+			<section class="panel" id="schedule">
+				<div class="panel-heading"><h2>Schedule</h2><span class="badge" id="schedule-count">0</span></div>
+				<div id="schedule-list" class="stack"></div>
+			</section>
+			<section class="panel" id="tracked">
+				<div class="panel-heading"><h2>Tracked websites</h2><span class="badge">Local</span></div>
+				<div id="tracked-list" class="stack"></div>
+			</section>
+			<section class="panel wide" id="history">
+				<div class="panel-heading"><h2>Page history</h2><span class="badge" id="history-count">0</span></div>
+				<div id="history-list" class="stack"></div>
+			</section>
+		</div>
+	</main>
+	<script src="dashboard.js"></script>
+</body>
+</html>
