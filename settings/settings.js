@@ -25,6 +25,7 @@
         "department",
         "registrationNumber",
 
+        "bloodGroup",
         "skills",
         "customInformation"
     ];
